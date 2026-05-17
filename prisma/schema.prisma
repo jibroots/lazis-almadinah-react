@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -20,15 +21,34 @@ model Penerimaan {
   @@map("penerimaan")
 }
 
-model kategori_zis {
-  id            Int     @id @default(autoincrement())
-  nama_kategori String  @unique @db.VarChar(50)
-  deskripsi     String?
+model Penyaluran {
+  id                Int       @id @default(autoincrement())
+  namaMustahik      String    @map("nama_mustahik") @db.VarChar(100)
+  kategoriId        String    @map("kategori_id") @db.VarChar(50)
+  jumlahUang        Decimal?  @default(0) @map("jumlah_uang") @db.Decimal(12, 2)
+  jumlahBeras       Decimal?  @default(0) @map("jumlah_beras") @db.Decimal(5, 2)
+  tanggalPenyaluran DateTime? @default(now()) @map("tanggal_penyaluran") @db.Timestamp(6)
+  keterangan        String?   @map("keterangan")
+
+  @@map("penyaluran")
 }
 
-model muzakki {
-  id       Int     @id @default(autoincrement())
-  nama     String  @db.VarChar(100)
-  nomor_hp String? @db.VarChar(20)
-  alamat   String?
+model KategoriZIS {
+  id        Int     @id @default(autoincrement())
+  nama      String  @unique @map("nama_kategori") @db.VarChar(50)
+  deskripsi String? @map("deskripsi")
+
+  @@map("kategori_zis")
+}
+
+model UserAmil {
+  id        Int      @id @default(autoincrement())
+  nama      String   @map("nama") @db.VarChar(100)
+  username  String   @unique @map("username") @db.VarChar(50)
+  password  String   @map("password") @db.VarChar(100)
+  role      String   @default("Amil") @map("role") @db.VarChar(20) // Admin, Bendahara, Amil
+  status    String   @default("Aktif") @map("status") @db.VarChar(20) // Aktif, Nonaktif
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@map("user_amil")
 }
