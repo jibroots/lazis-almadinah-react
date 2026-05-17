@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Penerimaan {
+  id                Int       @id @default(autoincrement())
+  namaMuzakki       String    @map("nama_muzakki") @db.VarChar(100)
+  nomorHp           String?   @map("nomor_hp") @db.VarChar(20)
+  kategoriId        String    @map("kategori_id") @db.VarChar(50)
+  jumlahUang        Decimal?  @default(0) @map("jumlah_uang") @db.Decimal(12, 2)
+  jumlahBeras       Decimal?  @default(0) @map("jumlah_beras") @db.Decimal(5, 2)
+  metodePembayaran  String?   @default("Tunai") @map("metode_pembayaran") @db.VarChar(30)
+  tanggalPenerimaan DateTime? @default(now()) @map("tanggal_penerimaan") @db.Timestamp(6)
+  keterangan        String?   @map("keterangan")
+
+  @@map("penerimaan")
+}
+
+model kategori_zis {
+  id            Int     @id @default(autoincrement())
+  nama_kategori String  @unique @db.VarChar(50)
+  deskripsi     String?
+}
+
+model muzakki {
+  id       Int     @id @default(autoincrement())
+  nama     String  @db.VarChar(100)
+  nomor_hp String? @db.VarChar(20)
+  alamat   String?
+}
