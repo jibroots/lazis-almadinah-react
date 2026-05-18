@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { 
   ArrowDownLeft, 
   ArrowUpRight, 
   TrendingUp, 
   TrendingDown, 
-  Scale 
+  Scale,
+  PieChart,
+  BarChart3
 } from 'lucide-react';
 import { UserAmil, Penerimaan, Penyaluran } from '../types/lazis';
 
@@ -35,20 +37,74 @@ export default function DashboardView({
   setActiveTab,
   formatRupiah
 }: DashboardViewProps) {
+
+  // Memoized Chart Data untuk Uang
+  const chartDataUang = useMemo(() => {
+    const groups = penerimaanList.reduce((acc, curr) => {
+      const cat = curr.kategoriId.toLowerCase();
+      let group = 'Lainnya';
+      if (cat.includes('fitrah')) group = 'Zakat Fitrah';
+      else if (cat.includes('maal') || cat.includes('mal')) group = 'Zakat Maal';
+      else if (cat.includes('infaq') || cat.includes('sedekah')) group = 'Infaq & Sedekah';
+      else if (cat.includes('fidyah')) group = 'Fidyah';
+      
+      acc[group] = (acc[group] || 0) + Number(curr.jumlahUang);
+      return acc;
+    }, {} as Record<string, number>);
+
+    const total = Object.values(groups).reduce((a, b) => a + b, 0);
+    const validTotal = total > 0 ? total : 1; // avoid division by zero
+    
+    return [
+      { label: 'Zakat Fitrah', value: groups['Zakat Fitrah'] || 0, color: 'bg-emerald-500' },
+      { label: 'Zakat Maal', value: groups['Zakat Maal'] || 0, color: 'bg-teal-600' },
+      { label: 'Infaq & Sedekah', value: groups['Infaq & Sedekah'] || 0, color: 'bg-amber-500' },
+      { label: 'Lainnya (Fidyah, dll)', value: (groups['Lainnya'] || 0) + (groups['Fidyah'] || 0), color: 'bg-blue-500' },
+    ].filter(item => item.value > 0)
+     .sort((a, b) => b.value - a.value)
+     .map(item => ({ ...item, percentage: ((item.value / validTotal) * 100).toFixed(1) }));
+  }, [penerimaanList]);
+
+  // Memoized Chart Data untuk Beras
+  const chartDataBeras = useMemo(() => {
+    const groups = penerimaanList.reduce((acc, curr) => {
+      const cat = curr.kategoriId.toLowerCase();
+      let group = 'Lainnya';
+      if (cat.includes('fitrah')) group = 'Zakat Fitrah';
+      else if (cat.includes('fidyah')) group = 'Fidyah';
+      else if (cat.includes('kifarat') || cat.includes('kafarat')) group = 'Kifarat';
+      
+      acc[group] = (acc[group] || 0) + Number(curr.jumlahBeras);
+      return acc;
+    }, {} as Record<string, number>);
+
+    const total = Object.values(groups).reduce((a, b) => a + b, 0);
+    const validTotal = total > 0 ? total : 1;
+    
+    return [
+      { label: 'Zakat Fitrah', value: groups['Zakat Fitrah'] || 0, color: 'bg-emerald-500' },
+      { label: 'Fidyah', value: groups['Fidyah'] || 0, color: 'bg-amber-600' },
+      { label: 'Kifarat & Lainnya', value: (groups['Lainnya'] || 0) + (groups['Kifarat'] || 0), color: 'bg-blue-500' },
+    ].filter(item => item.value > 0)
+     .sort((a, b) => b.value - a.value)
+     .map(item => ({ ...item, percentage: ((item.value / validTotal) * 100).toFixed(1) }));
+  }, [penerimaanList]);
+
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fadeIn">
       {/* Dashboard Banner */}
       <div className="bg-linear-to-r from-emerald-800 to-teal-800 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-lg">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] bg-size-[12px_12px] pointer-events-none"></div>
-        <div className="relative z-10 max-w-2xl">
+        <div className="relative z-10 w-full">
           <span className="text-xs font-bold bg-emerald-950/40 border border-emerald-500/20 px-3 py-1 rounded-full text-emerald-300 uppercase tracking-wider">
-            Internal Dashboard Pengurus
+            Dashboard Pengurus LAZIS Masjid Al-Madinah
           </span>
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mt-3 text-white">
             Assalamu'alaikum, {currentUser?.nama}!
           </h1>
-          <p className="text-emerald-100/80 text-sm sm:text-base mt-2 font-light">
-            Selamat datang di Sistem Informasi LAZIS Masjid Al-Madinah. Anda login sebagai **{currentUser?.role}**. Pantau masuk dan keluarnya dana serta stok beras secara transparan.
+          <p className="text-emerald-100/80 text-sm sm:text-base mt-2 font-light leading-relaxed">
+            Selamat datang di Sistem Informasi LAZIS Masjid Al-Madinah. Anda login sebagai <strong className="text-emerald-200 font-bold">{currentUser?.role}</strong>. Pantau arus masuk dan keluarnya dana serta stok beras secara transparan dan real-time.
           </p>
         </div>
       </div>
@@ -56,9 +112,9 @@ export default function DashboardView({
       {/* Balance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Cash Balance */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex justify-between items-center">
-            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Saldo Uang Kas</span>
+            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Total Hasil Penjualan Beras</span>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
               <Scale className="w-5 h-5" />
             </div>
@@ -79,16 +135,16 @@ export default function DashboardView({
         </div>
 
         {/* Rice Balance */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex justify-between items-center">
-            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Saldo Stok Beras</span>
+            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Total Penerimaan Beras</span>
             <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
               <span className="text-lg">🌾</span>
             </div>
           </div>
           <div className="mt-4">
             <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              {saldoBeras} kg
+              {saldoBeras} <span className="text-lg text-slate-500 font-bold">kg</span>
             </h3>
             <div className="flex items-center gap-3 mt-3 text-[10px] font-semibold">
               <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-0.5">
@@ -102,7 +158,7 @@ export default function DashboardView({
         </div>
 
         {/* Total Transactions Activity */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex justify-between items-center">
             <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Aktivitas Transaksi</span>
             <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
@@ -111,7 +167,7 @@ export default function DashboardView({
           </div>
           <div className="mt-4">
             <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              {penerimaanList.length + penyaluranList.length} Total
+              {penerimaanList.length + penyaluranList.length} <span className="text-lg text-slate-500 font-bold">Total</span>
             </h3>
             <div className="flex items-center gap-3 mt-3 text-[10px] font-semibold">
               <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
@@ -125,6 +181,99 @@ export default function DashboardView({
         </div>
       </div>
 
+      {/* Analytics Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        {/* Chart Uang */}
+        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+              <PieChart className="w-5 h-5 text-emerald-600" />
+              Komposisi Penerimaan Uang
+            </h3>
+          </div>
+          
+          {chartDataUang.length > 0 ? (
+            <div className="space-y-6">
+              {/* Stacked Bar */}
+              <div className="w-full h-5 rounded-full overflow-hidden flex gap-0.5 bg-slate-100 shadow-inner">
+                {chartDataUang.map(d => (
+                  <div 
+                    key={d.label} 
+                    style={{ width: `${Math.max(Number(d.percentage), 2)}%` }} 
+                    className={`h-full ${d.color} transition-all duration-1000 ease-out`} 
+                    title={`${d.label}: ${formatRupiah(d.value)}`} 
+                  />
+                ))}
+              </div>
+              
+              {/* Legends */}
+              <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
+                {chartDataUang.map(d => (
+                  <div key={d.label} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-1.5">
+                      <div className={`w-3 h-3 rounded-full ${d.color} shadow-sm`} />
+                      {d.label}
+                    </div>
+                    <div className="text-sm font-extrabold text-slate-800">{formatRupiah(d.value)}</div>
+                    <div className="text-[10px] text-slate-400 font-semibold mt-0.5">{d.percentage}% dari total</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-xs text-slate-400 font-semibold border-2 border-dashed border-slate-100 rounded-xl">
+              Belum ada data penerimaan uang.
+            </div>
+          )}
+        </div>
+
+        {/* Chart Beras */}
+        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-amber-600" />
+              Komposisi Penerimaan Beras
+            </h3>
+          </div>
+
+          {chartDataBeras.length > 0 ? (
+            <div className="space-y-6">
+              {/* Stacked Bar */}
+              <div className="w-full h-5 rounded-full overflow-hidden flex gap-0.5 bg-slate-100 shadow-inner">
+                {chartDataBeras.map(d => (
+                  <div 
+                    key={d.label} 
+                    style={{ width: `${Math.max(Number(d.percentage), 2)}%` }} 
+                    className={`h-full ${d.color} transition-all duration-1000 ease-out`} 
+                    title={`${d.label}: ${d.value} kg`} 
+                  />
+                ))}
+              </div>
+              
+              {/* Legends */}
+              <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
+                {chartDataBeras.map(d => (
+                  <div key={d.label} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-1.5">
+                      <div className={`w-3 h-3 rounded-full ${d.color} shadow-sm`} />
+                      {d.label}
+                    </div>
+                    <div className="text-sm font-extrabold text-slate-800">{d.value} <span className="text-xs text-slate-500">kg</span></div>
+                    <div className="text-[10px] text-slate-400 font-semibold mt-0.5">{d.percentage}% dari total</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-xs text-slate-400 font-semibold border-2 border-dashed border-slate-100 rounded-xl">
+              Belum ada data penerimaan beras.
+            </div>
+          )}
+        </div>
+
+      </div>
+
       {/* Recent Activity Lists */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Income Receipts */}
@@ -134,26 +283,30 @@ export default function DashboardView({
               <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
               Penerimaan Terkini
             </h3>
-            <button onClick={() => setActiveTab('penerimaan')} className="text-xs text-emerald-600 font-bold hover:underline">
+            <button onClick={() => setActiveTab('penerimaan')} className="text-xs text-emerald-600 font-bold hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
               Lihat Semua
             </button>
           </div>
           
           <div className="divide-y divide-slate-100">
-            {penerimaanList.slice(0, 3).map((item) => (
-              <div key={item.id} className="py-3 flex items-center justify-between text-xs sm:text-sm">
+            {penerimaanList.slice(0, 5).map((item) => (
+              <div key={item.id} className="py-3.5 flex items-center justify-between text-xs sm:text-sm hover:bg-slate-50/50 px-2 -mx-2 rounded-xl transition-colors">
                 <div>
-                  <div className="font-semibold text-slate-800">{item.namaMuzakki}</div>
-                  <div className="text-[11px] text-slate-600 font-bold mt-0.5">{item.kategoriId} • {item.metodePembayaran}</div>
+                  <div className="font-extrabold text-slate-800">{item.namaMuzakki}</div>
+                  <div className="text-[11px] text-slate-500 font-bold mt-1 flex items-center gap-1.5">
+                    <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">{item.kategoriId}</span> 
+                    <span>•</span> 
+                    <span>{item.metodePembayaran}</span>
+                  </div>
                 </div>
                 <div className="text-right">
-                  {Number(item.jumlahUang) > 0 && <div className="font-bold text-emerald-600">{formatRupiah(Number(item.jumlahUang))}</div>}
-                  {Number(item.jumlahBeras) > 0 && <div className="font-bold text-amber-700">🌾 {item.jumlahBeras} kg</div>}
+                  {Number(item.jumlahUang) > 0 && <div className="font-extrabold text-emerald-600">{formatRupiah(Number(item.jumlahUang))}</div>}
+                  {Number(item.jumlahBeras) > 0 && <div className="font-extrabold text-amber-700 mt-0.5">🌾 {item.jumlahBeras} kg</div>}
                 </div>
               </div>
             ))}
             {penerimaanList.length === 0 && (
-              <div className="text-center py-6 text-xs text-slate-400">Tidak ada penerimaan hari ini.</div>
+              <div className="text-center py-6 text-xs text-slate-400 font-semibold">Tidak ada penerimaan hari ini.</div>
             )}
           </div>
         </div>
@@ -165,24 +318,29 @@ export default function DashboardView({
               <ArrowUpRight className="w-4 h-4 text-rose-600" />
               Penyaluran Terkini
             </h3>
-            <button onClick={() => setActiveTab('penyaluran')} className="text-xs text-emerald-600 font-bold hover:underline">
+            <button onClick={() => setActiveTab('penyaluran')} className="text-xs text-emerald-600 font-bold hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
               Lihat Semua
             </button>
           </div>
 
           <div className="divide-y divide-slate-100">
-            {penyaluranList.slice(0, 3).map((item) => (
-              <div key={item.id} className="py-3 flex items-center justify-between text-xs sm:text-sm">
+            {penyaluranList.slice(0, 5).map((item) => (
+              <div key={item.id} className="py-3.5 flex items-center justify-between text-xs sm:text-sm hover:bg-slate-50/50 px-2 -mx-2 rounded-xl transition-colors">
                 <div>
-                  <div className="font-semibold text-slate-800">{item.namaMustahik}</div>
-                  <div className="text-[11px] text-slate-600 font-bold mt-0.5">{item.kategoriId}</div>
+                  <div className="font-extrabold text-slate-800">{item.namaMustahik}</div>
+                  <div className="text-[11px] text-slate-500 font-bold mt-1">
+                    <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">{item.kategoriId}</span>
+                  </div>
                 </div>
                 <div className="text-right">
-                  {Number(item.jumlahUang) > 0 && <div className="font-bold text-rose-600">-{formatRupiah(Number(item.jumlahUang))}</div>}
-                  {Number(item.jumlahBeras) > 0 && <div className="font-bold text-rose-600">🌾 -{item.jumlahBeras} kg</div>}
+                  {Number(item.jumlahUang) > 0 && <div className="font-extrabold text-rose-600">-{formatRupiah(Number(item.jumlahUang))}</div>}
+                  {Number(item.jumlahBeras) > 0 && <div className="font-extrabold text-rose-600 mt-0.5">🌾 -{item.jumlahBeras} kg</div>}
                 </div>
               </div>
             ))}
+            {penyaluranList.length === 0 && (
+              <div className="text-center py-6 text-xs text-slate-400 font-semibold">Tidak ada penyaluran hari ini.</div>
+            )}
           </div>
         </div>
       </div>

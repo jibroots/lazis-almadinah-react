@@ -32,11 +32,13 @@ export async function GET() {
     const totalUsers = await prisma.userAmil.count();
     let seededAdmin = false;
     if (totalUsers === 0) {
+      const { hashPassword } = await import('@/lib/auth');
+      const hashedPassword = await hashPassword('almadinahadmin2026');
       await prisma.userAmil.create({
         data: {
           nama: 'Super Admin Masjid',
           username: 'superadmin',
-          password: 'almadinahadmin2026', // Plaintext for simplicity / demonstration as requested, or can be hashed.
+          password: hashedPassword,
           role: 'Admin',
           status: 'Aktif'
         }

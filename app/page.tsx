@@ -22,6 +22,7 @@ import UserView from '../components/UserView';
 export default function Home() {
   // Authentication States
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [currentUser, setCurrentUser] = useState<UserAmil | null>(null);
 
   // Navigation & UI States
@@ -97,6 +98,17 @@ export default function Home() {
       if (!res.ok) throw new Error('Gagal melakukan inisialisasi database');
       const initResult = await res.json();
       
+      // Check if user already has a valid JWT session
+      const authRes = await fetch('/api/auth/me');
+      if (authRes.ok) {
+        const authData = await authRes.json();
+        if (authData.authenticated) {
+          setCurrentUser(authData.user);
+          setIsLoggedIn(true);
+        }
+      }
+      setIsCheckingAuth(false);
+
       // Load all records in parallel
       await Promise.all([
         fetchPenerimaan(),
@@ -133,7 +145,12 @@ export default function Home() {
     setActiveTab('dashboard');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (err) {
+      console.error(err);
+    }
     setIsLoggedIn(false);
     setCurrentUser(null);
     showNotification('success', 'Anda telah berhasil keluar dari sistem keamanan.');
@@ -438,6 +455,18 @@ export default function Home() {
     }
   };
 
+  // Render Loading while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-slate-900">
+        <div className="flex flex-col items-center gap-4 animate-pulse">
+          <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="text-emerald-500 font-extrabold tracking-widest text-xs uppercase">Memuat Sesi...</div>
+        </div>
+      </div>
+    );
+  }
+
   // Render Login screen if not authenticated
   if (!isLoggedIn) {
     return (
@@ -513,6 +542,7 @@ export default function Home() {
               <PenerimaanView 
                 penerimaanList={penerimaanList}
                 kategoriList={kategoriList}
+                currentUser={currentUser}
                 isLoading={isLoading}
                 onAdd={handleAddPenerimaan}
                 onEdit={handleEditPenerimaan}

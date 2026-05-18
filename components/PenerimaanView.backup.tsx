@@ -13,18 +13,13 @@ import {
   User, 
   Check, 
   ArrowLeft,
-  ChevronDown,
-  Receipt,
-  UserPlus,
-  Send,
-  Calculator
+  ChevronDown
 } from 'lucide-react';
-import { Penerimaan, KategoriZIS, UserAmil } from '../types/lazis';
+import { Penerimaan, KategoriZIS } from '../types/lazis';
 
 interface PenerimaanViewProps {
   penerimaanList: Penerimaan[];
   kategoriList: KategoriZIS[];
-  currentUser: UserAmil | null;
   isLoading: boolean;
   onAdd: (newData: any) => Promise<boolean>;
   onEdit: (updatedData: any) => Promise<boolean>;
@@ -35,7 +30,6 @@ interface PenerimaanViewProps {
 export default function PenerimaanView({
   penerimaanList,
   kategoriList,
-  currentUser,
   isLoading,
   onAdd,
   onEdit,
@@ -63,100 +57,32 @@ export default function PenerimaanView({
     jumlahUang: '',
     jumlahBeras: '',
     metode: 'Tunai',
-    keterangan: '',
-    amilPenerima: ''
+    keterangan: ''
   });
-
-  const handleNominalChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'jumlahUang' | 'nominalBayar') => {
-    const val = e.target.value.replace(/\D/g, '');
-    const formatted = val ? new Intl.NumberFormat('id-ID').format(Number(val)) : '';
-    if (field === 'jumlahUang') setForm(prev => ({ ...prev, jumlahUang: formatted }));
-    else setNominalBayar(formatted);
-  };
-
-  const handleSendWA = (item: Penerimaan) => {
-    if (!item.nomorHp) { alert('Nomor WhatsApp tidak tersedia untuk donatur ini.'); return; }
-    const totalRp = Number(item.jumlahUang) || 0;
-    const totalKg = Number(item.jumlahBeras) || 0;
-    const text = `Assalamu'alaikum Wr. Wb.\n\nAlhamdulillah, kami telah menerima titipan ZIS dari Bapak/Ibu *${item.namaMuzakki}* sejumlah${totalRp > 0 ? ` *Rp ${new Intl.NumberFormat('id-ID').format(totalRp)}*` : ''}${totalRp > 0 && totalKg > 0 ? ' dan' : ''}${totalKg > 0 ? ` *Beras ${totalKg} kg*` : ''} untuk kategori *${item.kategoriId}*.\n\nSemoga Allah SWT memberkahi Bapak/Ibu dan keluarga.\nTerima kasih.\n\n_Pesan otomatis dari LAZIS Al-Madinah_`;
-    window.open(`https://wa.me/${item.nomorHp.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
-  };
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpenKategori, setIsOpenKategori] = useState(false);
   const [isOpenMetode, setIsOpenMetode] = useState(false);
 
-  // Zakat Fitrah Specific States
-  const [isFitrahMode, setIsFitrahMode] = useState(false);
-  const [opsiFitrah, setOpsiFitrah] = useState<'bawa_sendiri' | 'beli_lokasi'>('beli_lokasi');
-  const [hargaBerasItem, setHargaBerasItem] = useState(15000);
-  const [anggotaKeluarga, setAnggotaKeluarga] = useState<string[]>([]);
-  const [anggotaInput, setAnggotaInput] = useState('');
-  const [nominalBayar, setNominalBayar] = useState('');
-  const [jadikanInfaq, setJadikanInfaq] = useState(true);
-  const [fitrahReceipt, setFitrahReceipt] = useState<any>(null);
-
-  // Zakat Fitrah Calculations
-  const totalJiwa = 1 + anggotaKeluarga.length;
-  const literPerJiwa = 3.5;
-  const totalLiter = totalJiwa * literPerJiwa;
-  const totalTagihanFitrah = opsiFitrah === 'beli_lokasi' ? totalLiter * hargaBerasItem : 0;
-  const kembalian = (Number(nominalBayar.replace(/\D/g, '')) || 0) - totalTagihanFitrah;
-  const infaqAmount = (kembalian > 0 && jadikanInfaq) ? kembalian : 0;
-
-  // Initialize kategori & amil
+  // Initialize kategori
   useEffect(() => {
-    setForm(prev => ({
-      ...prev, 
-      kategori: prev.kategori || (kategoriList.length > 0 ? kategoriList[0].nama : ''),
-      amilPenerima: prev.amilPenerima || currentUser?.nama || ''
-    }));
-  }, [kategoriList, currentUser]);
-
-  // Check if Fitrah Mode
-  useEffect(() => {
-    const kat = kategoriList.find(k => k.nama === form.kategori);
-    if (kat && kat.nama.toLowerCase().includes('fitrah')) {
-      setIsFitrahMode(true);
-      setForm(prev => ({ ...prev, jenisDonasi: 'uang' }));
-    } else {
-      setIsFitrahMode(false);
+    if (kategoriList.length > 0 && !form.kategori) {
+      setForm(prev => ({ ...prev, kategori: kategoriList[0].id }));
     }
-  }, [form.kategori, kategoriList]);
-
-  const handleAddAnggota = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      const val = anggotaInput.trim();
-      if (val && !anggotaKeluarga.includes(val)) {
-        setAnggotaKeluarga([...anggotaKeluarga, val]);
-      }
-      setAnggotaInput('');
-    }
-  };
-
-  const removeAnggota = (idx: number) => {
-    setAnggotaKeluarga(anggotaKeluarga.filter((_, i) => i !== idx));
-  };
+  }, [kategoriList]);
 
   // Reset Form helper
   const resetForm = () => {
     setForm({
       nama: '',
       whatsapp: '',
-      kategori: kategoriList[0]?.nama || '',
+      kategori: kategoriList[0]?.id || '',
       jenisDonasi: 'uang',
       jumlahUang: '',
       jumlahBeras: '',
       metode: 'Tunai',
-      keterangan: '',
-      amilPenerima: currentUser?.nama || ''
+      keterangan: ''
     });
-    setAnggotaKeluarga([]);
-    setAnggotaInput('');
-    setNominalBayar('');
-    setJadikanInfaq(true);
-    setOpsiFitrah('beli_lokasi');
   };
 
   // Open Edit Form and populate it
@@ -176,11 +102,10 @@ export default function PenerimaanView({
       whatsapp: item.nomorHp || '',
       kategori: item.kategoriId,
       jenisDonasi: jenis,
-      jumlahUang: uangVal > 0 ? new Intl.NumberFormat('id-ID').format(uangVal) : '',
+      jumlahUang: uangVal > 0 ? String(uangVal) : '',
       jumlahBeras: berasVal > 0 ? String(berasVal) : '',
       metode: item.metodePembayaran || 'Tunai',
-      keterangan: item.keterangan || '',
-      amilPenerima: item.amilPenerima || currentUser?.nama || ''
+      keterangan: item.keterangan || ''
     });
     setEditingItem(item);
     setViewMode('edit');
@@ -192,64 +117,24 @@ export default function PenerimaanView({
     if (!form.nama.trim()) return;
 
     setIsSubmitting(true);
+    const uangVal = form.jenisDonasi === 'beras' ? 0 : Number(form.jumlahUang) || 0;
+    const berasVal = form.jenisDonasi === 'uang' ? 0 : Number(form.jumlahBeras) || 0;
+
+    const payload = {
+      nama: form.nama.trim(),
+      whatsapp: form.whatsapp.trim() || null,
+      kategori: form.kategori,
+      jumlahUang: uangVal,
+      jumlahBeras: berasVal,
+      metode: form.metode,
+      keterangan: form.keterangan.trim() || null
+    };
+
     let success = false;
-    let submitPayload: any = null;
-
-    if (isFitrahMode && !editingItem) {
-      // FITRAH FLOW (Baru)
-      const ketAnggota = anggotaKeluarga.length > 0 ? ` (+ ${anggotaKeluarga.join(', ')})` : '';
-      const infaqText = infaqAmount > 0 ? ` (Termasuk Infaq Rp ${new Intl.NumberFormat('id-ID').format(infaqAmount)})` : '';
-      const ketFitrah = `Zakat Fitrah ${totalJiwa} Jiwa${ketAnggota}${infaqText}`;
-      
-      submitPayload = {
-        nama: form.nama.trim(),
-        whatsapp: form.whatsapp.trim() || null,
-        kategori: form.kategori,
-        jumlahUang: opsiFitrah === 'beli_lokasi' ? Number(nominalBayar.replace(/\D/g, '')) : 0,
-        jumlahBeras: totalLiter,
-        metode: form.metode,
-        keterangan: (form.keterangan ? form.keterangan.trim() + ' | ' : '') + ketFitrah,
-        amilPenerima: form.amilPenerima || currentUser?.nama || 'Sistem'
-      };
-
-      success = await onAdd(submitPayload);
-
-      if (success) {
-         setFitrahReceipt({
-           ...submitPayload,
-           totalJiwa,
-           hargaBerasItem,
-           nominalBayar: Number(nominalBayar.replace(/\D/g, '')),
-           kembalian,
-           infaqAmount,
-           tanggal: new Date()
-         });
-         setIsSubmitting(false);
-         return; // Skip reseting view to show receipt modal
-      }
+    if (editingItem) {
+      success = await onEdit({ ...payload, id: editingItem.id });
     } else {
-      // NORMAL FLOW
-      const uangVal = form.jenisDonasi === 'beras' ? 0 : Number(String(form.jumlahUang).replace(/\D/g, '')) || 0;
-      const berasVal = form.jenisDonasi === 'uang' ? 0 : Number(form.jumlahBeras) || 0;
-
-      submitPayload = {
-        nama: form.nama.trim(),
-        whatsapp: form.whatsapp.trim() || null,
-        kategori: form.kategori,
-        jumlahUang: uangVal,
-        jumlahBeras: berasVal,
-        metode: form.metode,
-        keterangan: form.keterangan.trim() || null,
-        amilPenerima: form.amilPenerima || currentUser?.nama || 'Sistem'
-      };
-
-      if (editingItem) {
-        success = await onEdit({ ...submitPayload, id: editingItem.id });
-      // After successful normal add/edit, ensure redirect to list
-      // This block already sets viewMode to 'list' on success.
-      // No changes needed here.
-        success = await onAdd(submitPayload);
-      }
+      success = await onAdd(payload);
     }
 
     setIsSubmitting(false);
@@ -365,7 +250,7 @@ export default function PenerimaanView({
                   }}
                   className="w-full px-4 py-3 rounded-xl border border-slate-250 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer font-semibold text-slate-800 flex items-center justify-between"
                 >
-                  <span>{form.kategori || 'Pilih Kategori Syariat ZIS'}</span>
+                  <span>{kategoriList.find(k => k.id === form.kategori)?.nama || 'Pilih Kategori Syariat ZIS'}</span>
                   <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isOpenKategori ? 'rotate-180' : ''}`} />
                 </button>
                 {isOpenKategori && (
@@ -376,15 +261,15 @@ export default function PenerimaanView({
                         <li
                           key={k.id}
                           onClick={() => {
-                            setForm(prev => ({ ...prev, kategori: k.nama }));
+                            setForm(prev => ({ ...prev, kategori: k.id }));
                             setIsOpenKategori(false);
                           }}
                           className={`px-4 py-2.5 hover:bg-emerald-50 hover:text-emerald-900 cursor-pointer flex items-center justify-between transition-colors ${
-                            form.kategori === k.nama ? 'bg-emerald-50 text-emerald-800 font-extrabold' : ''
+                            form.kategori === k.id ? 'bg-emerald-50 text-emerald-800 font-extrabold' : ''
                           }`}
                         >
                           <span>{k.nama}</span>
-                          {form.kategori === k.nama && <Check className="w-4.5 h-4.5 text-emerald-600 shrink-0" />}
+                          {form.kategori === k.id && <Check className="w-4.5 h-4.5 text-emerald-600 shrink-0" />}
                         </li>
                       ))}
                     </ul>
@@ -393,153 +278,64 @@ export default function PenerimaanView({
               </div>
             </div>
 
-            {/* ZAKAT FITRAH CUSTOM FLOW ATAU DONASI BIASA */}
-            {isFitrahMode && !editingItem ? (
-              <div className="bg-emerald-50/70 rounded-2xl p-6 border border-emerald-150 space-y-6">
-                <div className="flex items-center gap-3 pb-3 border-b border-emerald-200/50">
-                  <Calculator className="w-5 h-5 text-emerald-700" />
-                  <h3 className="font-extrabold text-emerald-900 text-sm tracking-wide">KALKULATOR ZAKAT FITRAH (3.5 LITER / JIWA)</h3>
-                </div>
-
-                <div className="space-y-4">
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Opsi Pembayaran Beras</label>
-                  <div className="flex gap-4">
-                    <button type="button" onClick={() => setOpsiFitrah('beli_lokasi')} className={`flex-1 py-3 px-4 rounded-xl font-bold text-xs border transition-all ${opsiFitrah === 'beli_lokasi' ? 'bg-emerald-600 text-white border-emerald-700' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>Membeli Beras di Lokasi (Tunai)</button>
-                    <button type="button" onClick={() => setOpsiFitrah('bawa_sendiri')} className={`flex-1 py-3 px-4 rounded-xl font-bold text-xs border transition-all ${opsiFitrah === 'bawa_sendiri' ? 'bg-amber-600 text-white border-amber-700' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>Bawa Beras Sendiri</button>
-                  </div>
-                </div>
-
-                {opsiFitrah === 'beli_lokasi' && (
-                  <div className="space-y-3">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Harga Beras per Liter</label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[15000, 16000, 17000].map((harga) => (
-                        <button key={harga} type="button" onClick={() => setHargaBerasItem(harga)} className={`py-2 rounded-xl text-xs font-bold border transition-all ${hargaBerasItem === harga ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
-                          Rp {harga.toLocaleString('id-ID')}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Tanggungan Anggota Keluarga (Opsional)</label>
-                  <div className="relative">
-                    <UserPlus className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-600" />
-                    <input type="text" value={anggotaInput} onChange={(e) => setAnggotaInput(e.target.value)} onKeyDown={handleAddAnggota} placeholder="Ketik nama lalu Enter atau koma (,)..." className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white" />
-                  </div>
-                  {anggotaKeluarga.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {anggotaKeluarga.map((nama, idx) => (
-                        <span key={idx} className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm">
-                          {nama} <button type="button" onClick={() => removeAnggota(idx)} className="text-emerald-500 hover:text-emerald-900"><X className="w-3 h-3" /></button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="bg-white p-4 rounded-xl border border-emerald-100 space-y-2">
-                  <div className="flex justify-between text-xs font-bold text-slate-600">
-                    <span>Total Jiwa (Muzakki + Anggota):</span>
-                    <span className="text-emerald-800 text-sm">{totalJiwa} Jiwa</span>
-                  </div>
-                  <div className="flex justify-between text-xs font-bold text-slate-600">
-                    <span>Total Beras Dibutuhkan:</span>
-                    <span className="text-amber-700 text-sm font-extrabold">{totalLiter} Liter</span>
-                  </div>
-                  {opsiFitrah === 'beli_lokasi' && (
-                    <div className="flex justify-between items-center pt-3 mt-1 border-t border-dashed border-emerald-200">
-                      <span className="text-slate-800 font-extrabold text-xs">TOTAL TAGIHAN ZAKAT:</span>
-                      <span className="text-emerald-700 font-extrabold text-lg">Rp {totalTagihanFitrah.toLocaleString('id-ID')}</span>
-                    </div>
-                  )}
-                </div>
-
-                {opsiFitrah === 'beli_lokasi' && (
-                  <div className="space-y-4 pt-4 border-t border-emerald-200/50">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Nominal Uang yang Dibayarkan (Rp)</label>
-                      <input type="text" value={nominalBayar} onChange={(e) => handleNominalChange(e, 'nominalBayar')} placeholder="0" className="w-full px-4 py-3 rounded-xl border border-emerald-200 text-lg font-bold text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white" required={opsiFitrah === 'beli_lokasi'} />
-                    </div>
-
-                    {kembalian > 0 && (
-                      <div className="bg-amber-50 p-4 rounded-xl border border-amber-200/60 shadow-inner">
-                        <div className="flex justify-between text-xs font-bold text-amber-900 mb-2">
-                          <span>Sisa Kembalian:</span>
-                          <span className="text-sm">Rp {kembalian.toLocaleString('id-ID')}</span>
-                        </div>
-                        <label className="flex items-center gap-2 cursor-pointer mt-3 bg-white p-2.5 rounded-lg border border-amber-100 hover:bg-amber-100/50 transition-colors">
-                          <input type="checkbox" checked={jadikanInfaq} onChange={(e) => setJadikanInfaq(e.target.checked)} className="w-4 h-4 text-emerald-600 rounded border-emerald-300 focus:ring-emerald-500" />
-                          <span className="text-xs font-extrabold text-slate-700">Jadikan sisa kembalian sebagai Infaq / Sedekah</span>
-                        </label>
-                      </div>
-                    )}
-                  </div>
-                )}
+            {/* Jenis Donasi Selector */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Jenis Penerimaan Donasi</label>
+              <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-100 rounded-xl max-w-md">
+                {['uang', 'beras', 'keduanya'].map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setForm(prev => ({ ...prev, jenisDonasi: type }))}
+                    className={`py-2 text-xs font-bold rounded-lg capitalize transition-all cursor-pointer ${
+                      form.jenisDonasi === type
+                        ? 'bg-white text-emerald-850 shadow-sm border border-emerald-100/30'
+                        : 'text-slate-500 hover:text-slate-850'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
               </div>
-            ) : (
-              <>
-                {/* Jenis Donasi Selector */}
+            </div>
+
+            {/* Jumlah Uang & Beras Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {(form.jenisDonasi === 'uang' || form.jenisDonasi === 'keduanya') && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Jenis Penerimaan Donasi</label>
-                  <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-100 rounded-xl max-w-md">
-                    {['uang', 'beras', 'keduanya'].map((type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setForm(prev => ({ ...prev, jenisDonasi: type }))}
-                        className={`py-2 text-xs font-bold rounded-lg capitalize transition-all cursor-pointer ${
-                          form.jenisDonasi === type
-                            ? 'bg-white text-emerald-850 shadow-sm border border-emerald-100/30'
-                            : 'text-slate-500 hover:text-slate-850'
-                        }`}
-                      >
-                        {type}
-                      </button>
-                    ))}
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Jumlah Nominal Uang (Rp)</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">Rp</span>
+                    <input
+                      type="number"
+                      value={form.jumlahUang}
+                      onChange={(e) => setForm(prev => ({ ...prev, jumlahUang: e.target.value }))}
+                      placeholder="0"
+                      className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-250 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-bold text-emerald-700"
+                      required
+                    />
                   </div>
                 </div>
+              )}
 
-                {/* Jumlah Uang & Beras Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {(form.jenisDonasi === 'uang' || form.jenisDonasi === 'keduanya') && (
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Jumlah Nominal Uang (Rp)</label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">Rp</span>
-                        <input
-                          type="text"
-                          value={form.jumlahUang}
-                          onChange={(e) => handleNominalChange(e, 'jumlahUang')}
-                          placeholder="0"
-                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-250 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-bold text-emerald-700"
-                          required={form.jenisDonasi === 'uang' || form.jenisDonasi === 'keduanya'}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {(form.jenisDonasi === 'beras' || form.jenisDonasi === 'keduanya') && (
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Jumlah Beras (kg)</label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={form.jumlahBeras}
-                          onChange={(e) => setForm(prev => ({ ...prev, jumlahBeras: e.target.value }))}
-                          placeholder="0"
-                          className="w-full pr-12 pl-4 py-3 rounded-xl border border-slate-250 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-bold text-amber-800"
-                          required={form.jenisDonasi === 'beras' || form.jenisDonasi === 'keduanya'}
-                        />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">kg</span>
-                      </div>
-                    </div>
-                  )}
+              {(form.jenisDonasi === 'beras' || form.jenisDonasi === 'keduanya') && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Jumlah Beras (kg)</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={form.jumlahBeras}
+                      onChange={(e) => setForm(prev => ({ ...prev, jumlahBeras: e.target.value }))}
+                      placeholder="0"
+                      className="w-full pr-12 pl-4 py-3 rounded-xl border border-slate-250 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-bold text-amber-800"
+                      required
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">kg</span>
+                  </div>
                 </div>
-              </>
-            )}
+              )}
+            </div>
 
             {/* Metode Pembayaran */}
             <div className="relative max-w-md">
@@ -593,17 +389,6 @@ export default function PenerimaanView({
                 rows={3}
                 className="w-full px-4 py-3 rounded-xl border border-slate-250 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-none font-medium text-slate-700"
               />
-            </div>
-
-            {/* Amil Penerima Info */}
-            <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-                <User className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-0.5">Amil / Petugas Penerima</div>
-                <div className="text-sm font-bold text-slate-800">{form.amilPenerima || 'Sistem'}</div>
-              </div>
             </div>
           </div>
 
@@ -703,7 +488,7 @@ export default function PenerimaanView({
                 <th className="p-4">Muzakki (Donatur)</th>
                 <th className="p-4">Kategori ZIS</th>
                 <th className="p-4 text-right">Jumlah Penerimaan</th>
-                <th className="p-4">Metode & Amil</th>
+                <th className="p-4">Metode</th>
                 <th className="p-4 text-center pr-6">Pilihan</th>
               </tr>
             </thead>
@@ -730,21 +515,9 @@ export default function PenerimaanView({
                     {Number(item.jumlahUang) > 0 && <div className="text-emerald-700 font-extrabold">{formatRupiah(Number(item.jumlahUang))}</div>}
                     {Number(item.jumlahBeras) > 0 && <div className="text-amber-800 font-extrabold">🌾 {item.jumlahBeras} kg</div>}
                   </td>
-                  <td className="p-4 text-slate-700 font-bold">
-                    <div>{item.metodePembayaran}</div>
-                    <div className="text-[10px] text-slate-500 font-extrabold mt-1 flex items-center gap-1"><User className="w-3 h-3 text-emerald-500"/>{item.amilPenerima || 'Sistem'}</div>
-                  </td>
+                  <td className="p-4 text-slate-700 font-bold">{item.metodePembayaran}</td>
                   <td className="p-4 text-center pr-6 whitespace-nowrap">
                     <div className="inline-flex gap-1.5">
-                      {item.nomorHp && (
-                        <button
-                          onClick={() => handleSendWA(item)}
-                          className="p-2 text-emerald-700 hover:bg-emerald-50 rounded-lg cursor-pointer transition-colors border border-emerald-200/50 bg-emerald-50/20"
-                          title="Kirim Struk via WA"
-                        >
-                          <Send className="w-4 h-4" />
-                        </button>
-                      )}
                       <button
                         onClick={() => setDetailItem(item)}
                         className="p-2 text-slate-700 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors border border-slate-200 bg-slate-50"
@@ -950,77 +723,6 @@ export default function PenerimaanView({
                   'Ya, Hapus'
                 )}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ====================================================
-          MODAL KUITANSI DIGITAL ZAKAT FITRAH WA
-          ==================================================== */}
-      {fitrahReceipt && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-fadeIn">
-          <div className="bg-white w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl border border-emerald-100 animate-scaleUp">
-            
-            <div className="bg-emerald-700 text-white px-6 py-6 text-center space-y-2 relative overflow-hidden">
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')] opacity-10"></div>
-              <button onClick={() => { setFitrahReceipt(null); setViewMode('list'); resetForm(); }} className="absolute right-4 top-4 text-white/80 hover:text-white cursor-pointer p-1 z-10 bg-black/10 rounded-full">
-                <X className="w-5 h-5" />
-              </button>
-              <div className="text-4xl inline-block p-4 bg-white/10 rounded-full border border-white/20 relative z-10 shadow-lg">🧾</div>
-              <h3 className="font-extrabold uppercase tracking-widest text-xs text-emerald-200 relative z-10 mt-3">KUITANSI DIGITAL BERHASIL</h3>
-              <h2 className="text-xl font-bold text-white relative z-10">Zakat Fitrah Diterima</h2>
-            </div>
-
-            <div className="p-6 space-y-6 text-slate-750">
-              <div className="space-y-4 text-xs font-bold bg-slate-50 p-5 rounded-2xl border border-slate-150">
-                <div className="flex justify-between border-b border-dashed border-slate-200 pb-3">
-                  <span className="text-slate-500 flex items-center gap-1.5"><User className="w-4 h-4" />Donatur Utama:</span><span className="text-slate-800 text-sm font-extrabold">{fitrahReceipt.nama}</span>
-                </div>
-                <div className="flex justify-between border-b border-dashed border-slate-200 pb-3">
-                  <span className="text-slate-500 flex items-center gap-1.5"><UserPlus className="w-4 h-4" />Total Tanggungan Zakat:</span><span className="text-emerald-700 text-sm font-extrabold bg-emerald-100 px-2 py-0.5 rounded-md">{fitrahReceipt.totalJiwa} Jiwa</span>
-                </div>
-                {fitrahReceipt.jumlahUang > 0 && (
-                  <div className="flex justify-between border-b border-dashed border-slate-200 pb-3">
-                    <span className="text-slate-500 flex items-center gap-1.5"><CreditCard className="w-4 h-4" />Nilai Zakat Uang:</span><span className="text-slate-800 text-sm font-extrabold">{formatRupiah(fitrahReceipt.jumlahUang)}</span>
-                  </div>
-                )}
-                {fitrahReceipt.jumlahBeras > 0 && (
-                  <div className="flex justify-between border-b border-dashed border-slate-200 pb-3">
-                    <span className="text-slate-500 flex items-center gap-1.5">🌾 Nilai Zakat Beras:</span><span className="text-amber-700 text-sm font-extrabold">{fitrahReceipt.jumlahBeras} Liter</span>
-                  </div>
-                )}
-                {fitrahReceipt.infaqAmount > 0 && (
-                  <div className="flex justify-between pb-1">
-                    <span className="flex items-center gap-1.5 text-amber-700">✨ Sisa Dijadikan Infaq:</span><span className="text-amber-700 text-sm font-extrabold bg-amber-100 px-2 py-0.5 rounded-md">{formatRupiah(fitrahReceipt.infaqAmount)}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <button
-                  onClick={() => {
-                    const waNum = fitrahReceipt.whatsapp?.replace(/^0/, '62') || '';
-                    const rincianBeras = fitrahReceipt.jumlahUang > 0 ? formatRupiah(fitrahReceipt.jumlahUang) : fitrahReceipt.jumlahBeras + ' Liter Beras';
-                    const sisaInfaq = fitrahReceipt.infaqAmount > 0 ? `\nInfaq Kembalian: ${formatRupiah(fitrahReceipt.infaqAmount)}\n` : '';
-                    
-                    const msg = `*KUITANSI ZAKAT FITRAH*\n*LAZIS AL-MADINAH*\n\nBismillah, Alhamdulillah telah diterima pembayaran Zakat Fitrah atas nama *${fitrahReceipt.nama}* beserta tanggungan (Total *${fitrahReceipt.totalJiwa} Jiwa*).\n\nNominal Zakat: ${rincianBeras}${sisaInfaq}\nSemoga Allah Ta'ala menerima amalan Zakat Fitrah keluarga Bapak/Ibu, menjadikannya pembersih jiwa, dan memberikan keberkahan pada harta yang tersisa. Aamiin Ya Rabbal 'Alamin.\n\n_Wassalamu'alaikum Warahmatullahi Wabarakatuh_\n_Amil LAZIS Al-Madinah_`;
-                    
-                    const url = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
-                    window.open(url, '_blank');
-                  }}
-                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:bg-slate-300 text-white rounded-xl shadow-[0_8px_16px_-4px_rgba(5,150,105,0.4)] font-extrabold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all hover:-translate-y-0.5"
-                >
-                  <Send className="w-5 h-5" />
-                  Kirim Kuitansi via WhatsApp
-                </button>
-                <button
-                  onClick={() => { setFitrahReceipt(null); setViewMode('list'); resetForm(); }}
-                  className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-xs cursor-pointer transition-colors"
-                >
-                  Selesai & Kembali
-                </button>
-              </div>
             </div>
           </div>
         </div>

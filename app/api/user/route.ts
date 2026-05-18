@@ -35,11 +35,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Username sudah digunakan!' }, { status: 400 });
     }
 
+    const { hashPassword } = await import('@/lib/auth');
+    const hashedPassword = await hashPassword(password || 'amilpassword2026');
+
     const dataBaru = await prisma.userAmil.create({
       data: {
         nama,
         username: username.toLowerCase().trim(),
-        password: password || 'amilpassword2026',
+        password: hashedPassword,
         role,
         status: status || 'Aktif'
       }
@@ -69,7 +72,8 @@ export async function PUT(request: Request) {
     };
 
     if (password && password.trim() !== '') {
-      updateData.password = password;
+      const { hashPassword } = await import('@/lib/auth');
+      updateData.password = await hashPassword(password);
     }
 
     const dataDiubah = await prisma.userAmil.update({

@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { PrismaNeon } from '@prisma/adapter-neon';
+import { z } from 'zod';
 
 const connectionString = process.env.DATABASE_URL || '';
 const adapter = new PrismaNeon({ connectionString });
 const prisma = new PrismaClient({ adapter });
+
+// Zod Validation Schema
+const penyaluranSchema = z.object({
+  namaMustahik: z.string().min(1, 'Nama Mustahik/Penerima wajib diisi!'),
+  kategoriId: z.string().min(1, 'Kategori ZIS wajib dipilih!'),
+  jumlahUang: z.preprocess((val) => Number(val) || 0, z.number().nonnegative('Jumlah uang tidak boleh bernilai negatif!')),
+  jumlahBeras: z.preprocess((val) => Number(val) || 0, z.number().nonnegative('Jumlah beras tidak boleh bernilai negatif!')),
+  keterangan: z.string().optional().nullable(),
+});
 
 // GET: Ambil data penyaluran
 export async function GET() {
@@ -24,14 +34,21 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { namaMustahik, kategoriId, jumlahUang, jumlahBeras, keterangan } = body;
+
+    // Validate request schema
+    const validation = penyaluranSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 });
+    }
+
+    const { namaMustahik, kategoriId, jumlahUang, jumlahBeras, keterangan } = validation.data;
 
     const dataBaru = await prisma.penyaluran.create({
       data: {
         namaMustahik,
         kategoriId,
-        jumlahUang: Number(jumlahUang) || 0,
-        jumlahBeras: Number(jumlahBeras) || 0,
+        jumlahUang,
+        jumlahBeras,
         keterangan: keterangan || null
       }
     });
@@ -46,19 +63,27 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, namaMustahik, kategoriId, jumlahUang, jumlahBeras, keterangan } = body;
+    const { id } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'ID penyaluran harus disertakan' }, { status: 400 });
     }
+
+    // Validate request schema
+    const validation = penyaluranSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 });
+    }
+
+    const { namaMustahik, kategoriId, jumlahUang, jumlahBeras, keterangan } = validation.data;
 
     const dataDiubah = await prisma.penyaluran.update({
       where: { id: Number(id) },
       data: {
         namaMustahik,
         kategoriId,
-        jumlahUang: Number(jumlahUang) || 0,
-        jumlahBeras: Number(jumlahBeras) || 0,
+        jumlahUang,
+        jumlahBeras,
         keterangan: keterangan || null
       }
     });

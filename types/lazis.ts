@@ -8,6 +8,7 @@ export interface Penerimaan {
   metodePembayaran: string | null;
   tanggalPenerimaan: string;
   keterangan: string | null;
+  amilPenerima: string | null;
 }
 
 export interface Penyaluran {
@@ -18,6 +19,7 @@ export interface Penyaluran {
   jumlahBeras: number;
   tanggalPenyaluran: string;
   keterangan: string | null;
+  amilPenyalur: string | null;
 }
 
 export interface UserAmil {
