@@ -51,6 +51,9 @@ export default function UserView({
     status: 'Aktif' as 'Aktif' | 'Nonaktif'
   });
 
+  const [isOpenRole, setIsOpenRole] = useState(false);
+  const [isOpenStatus, setIsOpenStatus] = useState(false);
+
   const resetForm = () => {
     setForm({
       nama: '',
@@ -212,35 +215,85 @@ export default function UserView({
 
             {/* Role & Status Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
+              <div className="relative">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Jabatan (Role Peran)</label>
-                <div className="relative">
-                  <select
-                    value={form.role}
-                    onChange={(e) => setForm(prev => ({ ...prev, role: e.target.value as any }))}
-                    className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-250 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer font-semibold text-slate-800 appearance-none"
-                  >
-                    <option value="Amil">Amil (Petugas Lapangan)</option>
-                    <option value="Bendahara">Bendahara (Keuangan)</option>
-                    <option value="Admin">Admin (Super Admin)</option>
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-slate-500" />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpenRole(!isOpenRole);
+                    setIsOpenStatus(false);
+                  }}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-250 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer font-semibold text-slate-800 flex items-center justify-between"
+                >
+                  <span>{form.role === 'Admin' ? 'Admin (Super Admin)' : form.role === 'Bendahara' ? 'Bendahara (Keuangan)' : 'Amil (Petugas Lapangan)'}</span>
+                  <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isOpenRole ? 'rotate-180' : ''}`} />
+                </button>
+                {isOpenRole && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsOpenRole(false)} />
+                    <ul className="absolute left-0 right-0 mt-1.5 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl py-1.5 text-sm font-semibold text-slate-800 animate-scaleUp">
+                      {[
+                        { value: 'Amil', label: 'Amil (Petugas Lapangan)' },
+                        { value: 'Bendahara', label: 'Bendahara (Keuangan)' },
+                        { value: 'Admin', label: 'Admin (Super Admin)' }
+                      ].map(opt => (
+                        <li
+                          key={opt.value}
+                          onClick={() => {
+                            setForm(prev => ({ ...prev, role: opt.value as any }));
+                            setIsOpenRole(false);
+                          }}
+                          className={`px-4 py-2.5 hover:bg-emerald-50 hover:text-emerald-900 cursor-pointer flex items-center justify-between transition-colors ${
+                            form.role === opt.value ? 'bg-emerald-50 text-emerald-800 font-extrabold' : ''
+                          }`}
+                        >
+                          <span>{opt.label}</span>
+                          {form.role === opt.value && <Check className="w-4.5 h-4.5 text-emerald-600 shrink-0" />}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
 
-              <div>
+              <div className="relative">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Status Akun</label>
-                <div className="relative">
-                  <select
-                    value={form.status}
-                    onChange={(e) => setForm(prev => ({ ...prev, status: e.target.value as any }))}
-                    className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-250 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer font-semibold text-slate-800 appearance-none"
-                  >
-                    <option value="Aktif">Aktif</option>
-                    <option value="Nonaktif">Nonaktif / Bekukan Akses</option>
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-slate-500" />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpenStatus(!isOpenStatus);
+                    setIsOpenRole(false);
+                  }}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-250 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer font-semibold text-slate-800 flex items-center justify-between"
+                >
+                  <span>{form.status === 'Aktif' ? 'Aktif' : 'Nonaktif / Bekukan Akses'}</span>
+                  <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isOpenStatus ? 'rotate-180' : ''}`} />
+                </button>
+                {isOpenStatus && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsOpenStatus(false)} />
+                    <ul className="absolute left-0 right-0 mt-1.5 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl py-1.5 text-sm font-semibold text-slate-800 animate-scaleUp">
+                      {[
+                        { value: 'Aktif', label: 'Aktif' },
+                        { value: 'Nonaktif', label: 'Nonaktif / Bekukan Akses' }
+                      ].map(opt => (
+                        <li
+                          key={opt.value}
+                          onClick={() => {
+                            setForm(prev => ({ ...prev, status: opt.value as any }));
+                            setIsOpenStatus(false);
+                          }}
+                          className={`px-4 py-2.5 hover:bg-emerald-50 hover:text-emerald-900 cursor-pointer flex items-center justify-between transition-colors ${
+                            form.status === opt.value ? 'bg-emerald-50 text-emerald-800 font-extrabold' : ''
+                          }`}
+                        >
+                          <span>{opt.label}</span>
+                          {form.status === opt.value && <Check className="w-4.5 h-4.5 text-emerald-600 shrink-0" />}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -470,7 +523,7 @@ export default function UserView({
                 {detailItem.password && (
                   <div className="flex justify-between">
                     <span className="text-slate-500 font-bold flex items-center gap-1.5">🔑 Password Sandi:</span>
-                    <span className="font-mono text-slate-800 font-extrabold bg-amber-50 text-amber-900 px-2.5 py-1.5 rounded-xl border border-amber-250">{detailItem.password}</span>
+                    <span className="font-mono font-extrabold bg-amber-50 text-amber-900 px-2.5 py-1.5 rounded-xl border border-amber-250">{detailItem.password}</span>
                   </div>
                 )}
 

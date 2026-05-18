@@ -61,6 +61,8 @@ export default function PenerimaanView({
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOpenKategori, setIsOpenKategori] = useState(false);
+  const [isOpenMetode, setIsOpenMetode] = useState(false);
 
   // Initialize kategori
   useEffect(() => {
@@ -238,18 +240,41 @@ export default function PenerimaanView({
                 />
               </div>
 
-              <div>
+              <div className="relative">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Kategori Syariat ZIS</label>
-                <div className="relative">
-                  <select
-                    value={form.kategori}
-                    onChange={(e) => setForm(prev => ({ ...prev, kategori: e.target.value }))}
-                    className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-250 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer font-semibold text-slate-800 appearance-none"
-                  >
-                    {kategoriList.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-slate-500" />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpenKategori(!isOpenKategori);
+                    setIsOpenMetode(false);
+                  }}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-250 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer font-semibold text-slate-800 flex items-center justify-between"
+                >
+                  <span>{kategoriList.find(k => k.id === form.kategori)?.nama || 'Pilih Kategori Syariat ZIS'}</span>
+                  <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isOpenKategori ? 'rotate-180' : ''}`} />
+                </button>
+                {isOpenKategori && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsOpenKategori(false)} />
+                    <ul className="absolute left-0 right-0 mt-1.5 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-60 overflow-y-auto py-1.5 text-sm font-semibold text-slate-800 animate-scaleUp">
+                      {kategoriList.map(k => (
+                        <li
+                          key={k.id}
+                          onClick={() => {
+                            setForm(prev => ({ ...prev, kategori: k.id }));
+                            setIsOpenKategori(false);
+                          }}
+                          className={`px-4 py-2.5 hover:bg-emerald-50 hover:text-emerald-900 cursor-pointer flex items-center justify-between transition-colors ${
+                            form.kategori === k.id ? 'bg-emerald-50 text-emerald-800 font-extrabold' : ''
+                          }`}
+                        >
+                          <span>{k.nama}</span>
+                          {form.kategori === k.id && <Check className="w-4.5 h-4.5 text-emerald-600 shrink-0" />}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
             </div>
 
@@ -313,20 +338,45 @@ export default function PenerimaanView({
             </div>
 
             {/* Metode Pembayaran */}
-            <div>
+            <div className="relative max-w-md">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Metode Penyetoran</label>
-              <div className="relative max-w-md">
-                <select
-                  value={form.metode}
-                  onChange={(e) => setForm(prev => ({ ...prev, metode: e.target.value }))}
-                  className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-250 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer font-semibold text-slate-800 appearance-none"
-                >
-                  <option value="Tunai">Tunai / Cash</option>
-                  <option value="Transfer Bank">Transfer Bank</option>
-                  <option value="QRIS">QRIS</option>
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-slate-500" />
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpenMetode(!isOpenMetode);
+                  setIsOpenKategori(false);
+                }}
+                className="w-full px-4 py-3 rounded-xl border border-slate-250 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer font-semibold text-slate-800 flex items-center justify-between"
+              >
+                <span>{form.metode === 'Tunai' ? 'Tunai / Cash' : form.metode}</span>
+                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isOpenMetode ? 'rotate-180' : ''}`} />
+              </button>
+              {isOpenMetode && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsOpenMetode(false)} />
+                  <ul className="absolute left-0 right-0 mt-1.5 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl py-1.5 text-sm font-semibold text-slate-800 animate-scaleUp">
+                    {[
+                      { value: 'Tunai', label: 'Tunai / Cash' },
+                      { value: 'Transfer Bank', label: 'Transfer Bank' },
+                      { value: 'QRIS', label: 'QRIS' }
+                    ].map(opt => (
+                      <li
+                        key={opt.value}
+                        onClick={() => {
+                          setForm(prev => ({ ...prev, metode: opt.value }));
+                          setIsOpenMetode(false);
+                        }}
+                        className={`px-4 py-2.5 hover:bg-emerald-50 hover:text-emerald-900 cursor-pointer flex items-center justify-between transition-colors ${
+                          form.metode === opt.value ? 'bg-emerald-50 text-emerald-800 font-extrabold' : ''
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {form.metode === opt.value && <Check className="w-4.5 h-4.5 text-emerald-600 shrink-0" />}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </div>
 
             {/* Keterangan Tambahan */}

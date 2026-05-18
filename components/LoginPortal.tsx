@@ -41,28 +41,25 @@ export default function LoginPortal({ onLoginSuccess, showNotification }: LoginP
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-slate-950 via-slate-900 to-emerald-950 p-4 relative font-sans overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-tr from-slate-950 via-slate-900 to-emerald-950 p-4 relative font-sans overflow-hidden">
       {/* Dynamic blurred radial glows */}
       <div className="absolute top-1/4 left-1/4 w-80 h-80 rounded-full bg-emerald-500/10 blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-teal-500/10 blur-[120px] pointer-events-none"></div>
-      <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+      <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#fff_1px,transparent_1px)] bg-size-[16px_16px] pointer-events-none"></div>
 
-      <div className="w-full max-w-md relative z-10 space-y-6">
-        <div className="text-center space-y-2 animate-fadeIn">
-          <div className="inline-flex w-16 h-16 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 shadow-inner items-center justify-center text-3xl">
-            🕌
-          </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">LAZIS Al-Madinah</h1>
-          <p className="text-emerald-400 font-bold text-xs uppercase tracking-widest">Sistem Informasi Pengurus Masjid</p>
-        </div>
-
+      <div className="w-full max-w-md relative z-10 space-y-8">
         <div className="bg-slate-900/90 border border-slate-700 p-8 rounded-3xl shadow-2xl space-y-6">
-          <div className="text-center space-y-1">
-            <h2 className="text-lg font-bold text-white flex items-center justify-center gap-2">
-              <Lock className="w-4.5 h-4.5 text-emerald-400" />
-              Portal Keamanan Amil
-            </h2>
-            <p className="text-xs text-slate-300 font-medium">Masukkan akun internal database Anda</p>
+          {/* Brand Logo & Title inside the Card */}
+          <div className="text-center space-y-3 animate-fadeIn border-b border-slate-800 pb-5">
+            <div className="inline-flex items-center justify-center">
+              <img 
+                src="/Logo-login.png" 
+                alt="Logo LAZIS Al-Madinah" 
+                className="h-15 w-auto object-contain"
+              />
+            </div>
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">LAZIS Al-Madinah</h1>
+            <p className="text-emerald-400 font-extrabold text-xs uppercase tracking-widest">Sistem Informasi Pengurus LAZIS Al-Madinah</p>
           </div>
 
           {loginError && (
@@ -71,21 +68,6 @@ export default function LoginPortal({ onLoginSuccess, showNotification }: LoginP
               <span>{loginError}</span>
             </div>
           )}
-
-          {/* Secure super admin information card with extremely high-contrast white text on dark background */}
-          <div className="bg-slate-800/95 border-2 border-emerald-500/30 rounded-2xl p-4 space-y-2 text-xs text-slate-100">
-            <div className="font-extrabold text-emerald-400 flex items-center gap-1.5 uppercase tracking-wide">
-              <Info className="w-4 h-4 shrink-0 text-emerald-400" />
-              Akses Super Admin Utama:
-            </div>
-            <p className="text-[11px] leading-relaxed text-slate-200 font-medium">
-              Sistem telah diinisialisasi otomatis ke database cloud Neon PostgreSQL. Silakan gunakan kredensial resmi berikut:
-            </p>
-            <div className="p-2.5 bg-slate-950 border border-slate-700 rounded-xl font-mono text-[11px] space-y-1 text-slate-100 font-bold">
-              <div>Username: <span className="text-emerald-355">superadmin</span></div>
-              <div>Password: <span className="text-amber-455">almadinahadmin2026</span></div>
-            </div>
-          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
@@ -128,7 +110,7 @@ export default function LoginPortal({ onLoginSuccess, showNotification }: LoginP
             <button
               type="submit"
               disabled={isLoggingIn}
-              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-505 hover:scale-[1.01] active:scale-[0.99] text-white font-extrabold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 hover:shadow-emerald-600/30 disabled:opacity-50 cursor-pointer"
+              className="w-full mt-6 py-3.5 bg-emerald-600 hover:bg-emerald-505 hover:scale-[1.01] active:scale-[0.99] text-white font-extrabold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 hover:shadow-emerald-600/30 disabled:opacity-50 cursor-pointer"
             >
               {isLoggingIn ? (
                 <>
@@ -147,7 +129,7 @@ export default function LoginPortal({ onLoginSuccess, showNotification }: LoginP
 
         <div className="text-center text-[10px] text-slate-400 font-extrabold tracking-widest flex items-center justify-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-          PLATFORM RESMI INTERNAL MASJID AL-MADINAH
+          PLATFORM RESMI LAZIS Masjid Al-Madinah System v1.0
         </div>
       </div>
     </div>

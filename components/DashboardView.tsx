@@ -38,8 +38,8 @@ export default function DashboardView({
   return (
     <div className="space-y-8">
       {/* Dashboard Banner */}
-      <div className="bg-gradient-to-r from-emerald-800 to-teal-800 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-lg">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:12px_12px] pointer-events-none"></div>
+      <div className="bg-linear-to-r from-emerald-800 to-teal-800 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-lg">
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] bg-size-[12px_12px] pointer-events-none"></div>
         <div className="relative z-10 max-w-2xl">
           <span className="text-xs font-bold bg-emerald-950/40 border border-emerald-500/20 px-3 py-1 rounded-full text-emerald-300 uppercase tracking-wider">
             Internal Dashboard Pengurus
@@ -48,7 +48,7 @@ export default function DashboardView({
             Assalamu'alaikum, {currentUser?.nama}!
           </h1>
           <p className="text-emerald-100/80 text-sm sm:text-base mt-2 font-light">
-            Selamat datang di Sistem Informasi ZIS Masjid Al-Madinah. Anda login sebagai **{currentUser?.role}**. Pantau masuk dan keluarnya dana serta stok beras secara transparan.
+            Selamat datang di Sistem Informasi LAZIS Masjid Al-Madinah. Anda login sebagai **{currentUser?.role}**. Pantau masuk dan keluarnya dana serta stok beras secara transparan.
           </p>
         </div>
       </div>

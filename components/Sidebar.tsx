@@ -28,18 +28,21 @@ export default function Sidebar({
   onLogout
 }: SidebarProps) {
   return (
-    <aside className={`w-72 bg-gradient-to-b from-emerald-900 to-emerald-950 text-emerald-100 flex flex-col shrink-0 border-r border-emerald-800 transition-all duration-300 fixed inset-y-0 left-0 z-40 md:relative md:translate-x-0 ${
+    <aside className={`w-72 bg-linear-to-b from-emerald-900 to-emerald-950 text-emerald-100 flex flex-col shrink-0 border-r border-emerald-800 transition-all duration-300 fixed inset-y-0 left-0 z-40 md:relative md:translate-x-0 ${
       sidebarOpen ? 'translate-x-0' : '-translate-x-full'
     }`}>
       {/* Brand Logo */}
       <div className="p-6 border-b border-emerald-800/40 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shadow-inner">
-            <span className="text-xl">🕌</span>
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shadow-inner overflow-hidden">
+            <img 
+                src="/pwa-icon-512.png" 
+                alt="Logo LAZIS Al-Madinah" 
+                className="w-full h-full object-contain p-1.5"
+              />
           </div>
           <div>
-            <h2 className="font-extrabold text-white text-base tracking-tight leading-5">AL-MADINAH</h2>
-            <span className="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase">Sistem Kasir LAZIS</span>
+            <h2 className="font-extrabold text-white text-base tracking-tight leading-5">LAZIS AL-MADINAH</h2>
           </div>
         </div>
         <button onClick={() => setSidebarOpen(false)} className="md:hidden text-emerald-300 hover:text-white">
