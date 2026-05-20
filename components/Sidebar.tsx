@@ -54,8 +54,8 @@ export default function Sidebar({
       <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
         {[
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-          { id: 'penerimaan', label: 'Penerimaan (Uang/Beras)', icon: ArrowDownLeft },
-          { id: 'penyaluran', label: 'Penyaluran (Mustahik)', icon: ArrowUpRight },
+          { id: 'penerimaan', label: 'Penerimaan', icon: ArrowDownLeft },
+          { id: 'penyaluran', label: 'Penyaluran', icon: ArrowUpRight },
           { id: 'kategori', label: 'Kategori ZIS', icon: Layers },
           { id: 'user', label: 'Pengaturan User', icon: Users },
         ].map((item) => {

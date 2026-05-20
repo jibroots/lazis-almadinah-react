@@ -21,7 +21,7 @@ export default function Header({
           <Menu className="w-6 h-6" />
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Internal Masjid</span>
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Badan Amal Masjid Al-Madinah</span>
           <span className="text-slate-300">/</span>
           <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded uppercase tracking-wider">
             {activeTab}

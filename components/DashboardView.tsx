@@ -6,7 +6,8 @@ import {
   TrendingDown, 
   Scale,
   PieChart,
-  BarChart3
+  BarChart3,
+  Heart
 } from 'lucide-react';
 import { UserAmil, Penerimaan, Penyaluran } from '../types/lazis';
 
@@ -42,13 +43,31 @@ export default function DashboardView({
   const chartDataUang = useMemo(() => {
     const groups = penerimaanList.reduce((acc, curr) => {
       const cat = curr.kategoriId.toLowerCase();
+      
+      // Hitung infaq sisa kembalian dari keterangan (jika ada)
+      let embeddedInfaq = 0;
+      if (curr.keterangan) {
+        const match = curr.keterangan.match(/Termasuk Infaq Rp\.?\s*([\d.]+)/i);
+        if (match) {
+          embeddedInfaq = Number(match[1].replace(/\./g, '')) || 0;
+        }
+      }
+
       let group = 'Lainnya';
       if (cat.includes('fitrah')) group = 'Zakat Fitrah';
       else if (cat.includes('maal') || cat.includes('mal')) group = 'Zakat Maal';
-      else if (cat.includes('infaq') || cat.includes('sedekah')) group = 'Infaq & Sedekah';
+      else if (cat.includes('infaq') || cat.includes('sedekah') || cat.includes('shodaqoh')) group = 'Infaq & Sedekah';
       else if (cat.includes('fidyah')) group = 'Fidyah';
       
-      acc[group] = (acc[group] || 0) + Number(curr.jumlahUang);
+      const totalUang = Number(curr.jumlahUang) || 0;
+      
+      if (embeddedInfaq > 0 && group !== 'Infaq & Sedekah') {
+        // Kurangi jumlah dari grup asal (misal Zakat Fitrah) dan pindahkan sisa kembaliannya ke Infaq & Sedekah
+        acc[group] = (acc[group] || 0) + (totalUang - embeddedInfaq);
+        acc['Infaq & Sedekah'] = (acc['Infaq & Sedekah'] || 0) + embeddedInfaq;
+      } else {
+        acc[group] = (acc[group] || 0) + totalUang;
+      }
       return acc;
     }, {} as Record<string, number>);
 
@@ -90,6 +109,40 @@ export default function DashboardView({
      .map(item => ({ ...item, percentage: ((item.value / validTotal) * 100).toFixed(1) }));
   }, [penerimaanList]);
 
+  // Memoized Stats untuk Infaq & Sedekah (Uang)
+  const statsInfaqShodaqoh = useMemo(() => {
+    const penerimaan = penerimaanList.reduce((acc, curr) => {
+      const cat = curr.kategoriId.toLowerCase();
+      // 1. Jika kategori transaksi memang Infaq/Sedekah/Shodaqoh, ambil seluruh jumlahUang
+      if (cat.includes('infaq') || cat.includes('sedekah') || cat.includes('shodaqoh')) {
+        return acc + (Number(curr.jumlahUang) || 0);
+      }
+      // 2. Jika kategori lain (seperti Zakat Fitrah), periksa apakah ada infaq sisa kembalian di keterangan
+      if (curr.keterangan) {
+        const match = curr.keterangan.match(/Termasuk Infaq Rp\.?\s*([\d.]+)/i);
+        if (match) {
+          const amountStr = match[1].replace(/\./g, '');
+          return acc + (Number(amountStr) || 0);
+        }
+      }
+      return acc;
+    }, 0);
+
+    const penyaluran = penyaluranList.reduce((acc, curr) => {
+      const cat = curr.kategoriId.toLowerCase();
+      if (cat.includes('infaq') || cat.includes('sedekah') || cat.includes('shodaqoh')) {
+        return acc + (Number(curr.jumlahUang) || 0);
+      }
+      return acc;
+    }, 0);
+
+    return {
+      penerimaan,
+      penyaluran,
+      saldo: penerimaan - penyaluran
+    };
+  }, [penerimaanList, penyaluranList]);
+
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -110,7 +163,7 @@ export default function DashboardView({
       </div>
 
       {/* Balance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Cash Balance */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex justify-between items-center">
@@ -129,6 +182,29 @@ export default function DashboardView({
               </span>
               <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded flex items-center gap-0.5">
                 <TrendingDown className="w-3 h-3" /> Penyaluran: {formatRupiah(totalPenyaluranUang)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Infaq & Shodaqoh Balance */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Saldo Infaq & Sedekah</span>
+            <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-650">
+              <Heart className="w-5 h-5 fill-rose-500 text-rose-500" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              {formatRupiah(statsInfaqShodaqoh.saldo)}
+            </h3>
+            <div className="flex items-center gap-3 mt-3 text-[10px] font-semibold">
+              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-0.5">
+                <TrendingUp className="w-3 h-3" /> Masuk: {formatRupiah(statsInfaqShodaqoh.penerimaan)}
+              </span>
+              <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded flex items-center gap-0.5">
+                <TrendingDown className="w-3 h-3" /> Keluar: {formatRupiah(statsInfaqShodaqoh.penyaluran)}
               </span>
             </div>
           </div>
