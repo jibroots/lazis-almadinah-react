@@ -225,13 +225,16 @@ export default function PenerimaanView({
   }, [form.kategori, kategoriList]);
 
   const handleAddAnggota = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Deteksi tombol Enter atau Koma
     if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      const val = anggotaInput.trim();
-      if (val && !anggotaKeluarga.includes(val)) {
-        setAnggotaKeluarga([...anggotaKeluarga, val]);
+      e.preventDefault(); // Wajib! Mencegah form melakukan "Submit" otomatis
+
+      const newName = anggotaInput.trim().replace(/,/g, ''); // Hapus koma berlebih dan spasi
+
+      if (newName !== '') {
+        setAnggotaKeluarga((prev) => [...prev, newName]);
+        setAnggotaInput(''); // Kosongkan input setelah berhasil ditambah
       }
-      setAnggotaInput('');
     }
   };
 
