@@ -1,3 +1,4 @@
+// Lokasi: app/api/kategori/route.ts
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { PrismaNeon } from '@prisma/adapter-neon';
@@ -10,9 +11,7 @@ const prisma = new PrismaClient({ adapter });
 export async function GET() {
   try {
     const data = await prisma.kategoriZIS.findMany({
-      orderBy: {
-        nama: 'asc'
-      }
+      orderBy: { nama: 'asc' }
     });
     return NextResponse.json(data);
   } catch (error: any) {
@@ -43,14 +42,14 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, nama, deskripsi } = body;
+    const { id, nama, deskripsi } = body; // id = nama lama, nama = nama baru
 
     if (!id) {
-      return NextResponse.json({ error: 'ID kategori harus disertakan' }, { status: 400 });
+      return NextResponse.json({ error: 'ID (Nama lama) kategori harus disertakan' }, { status: 400 });
     }
 
     const dataDiubah = await prisma.kategoriZIS.update({
-      where: { nama: id }, // Use natural key 'nama' or ID as search parameter
+      where: { id: Number(id) }, 
       data: {
         nama,
         deskripsi: deskripsi || null
@@ -67,14 +66,14 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id'); // ID is the string 'nama' since it's unique
+    const id = searchParams.get('id'); // id di sini adalah nama kategori yang ingin dihapus
 
     if (!id) {
-      return NextResponse.json({ error: 'ID kategori harus disertakan' }, { status: 400 });
+      return NextResponse.json({ error: 'ID kategori harus disertakan di URL' }, { status: 400 });
     }
 
     await prisma.kategoriZIS.delete({
-      where: { nama: id }
+      where: { id: Number(id) }
     });
 
     return NextResponse.json({ success: true, message: 'Kategori berhasil dihapus' });

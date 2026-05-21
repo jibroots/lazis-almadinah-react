@@ -341,12 +341,12 @@ export default function Home() {
     }
   };
 
-  const handleEditKategori = async (id: string, updatedData: any) => {
+  const handleEditKategori = async (id: number, updatedData: any) => {
     try {
       const response = await fetch('/api/kategori', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, ...updatedData })
+        body: JSON.stringify({ id: id, ...updatedData })
       });
 
       if (!response.ok) {
@@ -363,9 +363,9 @@ export default function Home() {
     }
   };
 
-  const handleDeleteKategori = async (id: string) => {
+  const handleDeleteKategori = async (id: number) => {
     try {
-      const response = await fetch(`/api/kategori?id=${id}`, {
+      const response = await fetch(`/api/kategori?id=${encodeURIComponent(id)}`, {
         method: 'DELETE'
       });
 

@@ -14,9 +14,9 @@ import { KategoriZIS } from '../types/lazis';
 
 interface KategoriViewProps {
   kategoriList: KategoriZIS[];
-  onAdd: (newData: any) => void;
-  onEdit: (id: string, updatedData: any) => void;
-  onDelete: (id: string) => void;
+  onAdd: (newData: any) => Promise<boolean>;
+  onEdit: (id: number, updatedData: any) => Promise<boolean>;
+  onDelete: (id: number) => Promise<boolean>;
 }
 
 export default function KategoriView({
@@ -53,7 +53,7 @@ export default function KategoriView({
     setViewMode('edit');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.nama.trim()) return;
 
@@ -63,9 +63,9 @@ export default function KategoriView({
     };
 
     if (editingItem) {
-      onEdit(editingItem.id, payload);
+      await onEdit(Number(editingItem.id), payload);
     } else {
-      onAdd(payload);
+      await onAdd(payload);
     }
 
     setViewMode('list');
@@ -73,9 +73,9 @@ export default function KategoriView({
     resetForm();
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!deletingItem) return;
-    onDelete(deletingItem.id);
+    await onDelete(Number(deletingItem.id));
     setDeletingItem(null);
   };
 
