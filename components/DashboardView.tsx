@@ -7,7 +7,8 @@ import {
   Scale,
   PieChart,
   BarChart3,
-  Heart
+  Heart,
+  Users
 } from 'lucide-react';
 import { UserAmil, Penerimaan, Penyaluran } from '../types/lazis';
 
@@ -143,6 +144,34 @@ export default function DashboardView({
     };
   }, [penerimaanList, penyaluranList]);
 
+  // Memoized Chart Data untuk Total Donatur (Jumlah Transaksi per Kategori)
+  const chartDataDonatur = useMemo(() => {
+    const groups = penerimaanList.reduce((acc, curr) => {
+      const cat = curr.kategoriId.toLowerCase();
+      let group = 'Lainnya';
+      
+      if (cat.includes('fitrah')) group = 'Zakat Fitrah';
+      else if (cat.includes('maal') || cat.includes('mal')) group = 'Zakat Maal';
+      else if (cat.includes('infaq') || cat.includes('sedekah') || cat.includes('shodaqoh')) group = 'Infaq & Sedekah';
+      else if (cat.includes('fidyah')) group = 'Fidyah';
+      
+      acc[group] = (acc[group] || 0) + 1; // Hitung 1 per transaksi/donatur
+      return acc;
+    }, {} as Record<string, number>);
+
+    const total = Object.values(groups).reduce((a, b) => a + b, 0);
+    const validTotal = total > 0 ? total : 1;
+    
+    return [
+      { label: 'Zakat Fitrah', value: groups['Zakat Fitrah'] || 0, color: 'bg-emerald-500' },
+      { label: 'Zakat Maal', value: groups['Zakat Maal'] || 0, color: 'bg-teal-600' },
+      { label: 'Infaq & Sedekah', value: groups['Infaq & Sedekah'] || 0, color: 'bg-amber-500' },
+      { label: 'Lainnya (Fidyah, dll)', value: (groups['Lainnya'] || 0) + (groups['Fidyah'] || 0), color: 'bg-blue-500' },
+    ].filter(item => item.value > 0)
+     .sort((a, b) => b.value - a.value)
+     .map(item => ({ ...item, percentage: ((item.value / validTotal) * 100).toFixed(1) }));
+  }, [penerimaanList]);
+
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -163,7 +192,7 @@ export default function DashboardView({
       </div>
 
       {/* Balance Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Cash Balance */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex justify-between items-center">
@@ -186,7 +215,28 @@ export default function DashboardView({
             </div>
           </div>
         </div>
-
+        {/* Rice Balance */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Total Penerimaan Beras</span>
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+              <span className="text-lg">🌾</span>
+            </div>
+          </div>
+          <div className="mt-4">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              {saldoBeras} <span className="text-lg text-slate-500 font-bold">Liter</span>
+            </h3>
+            <div className="flex items-center gap-3 mt-3 text-[10px] font-semibold">
+              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-0.5">
+                Masuk: {totalPenerimaanBeras} kg
+              </span>
+              <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded flex items-center gap-0.5">
+                Keluar: {totalPenyaluranBeras} kg
+              </span>
+            </div>
+          </div>
+        </div>
         {/* Infaq & Shodaqoh Balance */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex justify-between items-center">
@@ -209,56 +259,10 @@ export default function DashboardView({
             </div>
           </div>
         </div>
-
-        {/* Rice Balance */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
-          <div className="flex justify-between items-center">
-            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Total Penerimaan Beras</span>
-            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
-              <span className="text-lg">🌾</span>
-            </div>
-          </div>
-          <div className="mt-4">
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              {saldoBeras} <span className="text-lg text-slate-500 font-bold">kg</span>
-            </h3>
-            <div className="flex items-center gap-3 mt-3 text-[10px] font-semibold">
-              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-0.5">
-                Masuk: {totalPenerimaanBeras} kg
-              </span>
-              <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded flex items-center gap-0.5">
-                Keluar: {totalPenyaluranBeras} kg
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Total Transactions Activity */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
-          <div className="flex justify-between items-center">
-            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Aktivitas Transaksi</span>
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-              <TrendingUp className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              {penerimaanList.length + penyaluranList.length} <span className="text-lg text-slate-500 font-bold">Total</span>
-            </h3>
-            <div className="flex items-center gap-3 mt-3 text-[10px] font-semibold">
-              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
-                {penerimaanList.length} Penerimaan
-              </span>
-              <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded">
-                {penyaluranList.length} Penyaluran
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Analytics Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Chart Uang */}
         <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200">
@@ -347,7 +351,52 @@ export default function DashboardView({
             </div>
           )}
         </div>
+{/* Chart Donatur (BARU) */}
+        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+              <Users className="w-5 h-5 text-blue-600" />
+              Total Donatur
+            </h3>
+            <span className="text-xs font-bold bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg">
+              {penerimaanList.length} Total
+            </span>
+          </div>
 
+          {chartDataDonatur.length > 0 ? (
+            <div className="space-y-6">
+              {/* Stacked Bar */}
+              <div className="w-full h-5 rounded-full overflow-hidden flex gap-0.5 bg-slate-100 shadow-inner">
+                {chartDataDonatur.map(d => (
+                  <div 
+                    key={d.label} 
+                    style={{ width: `${Math.max(Number(d.percentage), 2)}%` }} 
+                    className={`h-full ${d.color} transition-all duration-1000 ease-out`} 
+                    title={`${d.label}: ${d.value} Orang`} 
+                  />
+                ))}
+              </div>
+              
+              {/* Legends */}
+              <div className="grid grid-cols-2 gap-4">
+                {chartDataDonatur.map(d => (
+                  <div key={d.label} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-1.5">
+                      <div className={`w-3 h-3 rounded-full ${d.color} shadow-sm`} />
+                      {d.label}
+                    </div>
+                    <div className="text-sm font-extrabold text-slate-800">{d.value} <span className="text-xs text-slate-500">Donatur</span></div>
+                    <div className="text-[10px] text-slate-400 font-semibold mt-0.5">{d.percentage}% dari total</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-xs text-slate-400 font-semibold border-2 border-dashed border-slate-100 rounded-xl">
+              Belum ada data donatur.
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Recent Activity Lists */}
