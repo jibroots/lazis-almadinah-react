@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       }
     });
 
-    return NextResponse.json({ success: true, data: dataBaru });
+    return NextResponse.json({ success: true, data: dataBaru.id }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

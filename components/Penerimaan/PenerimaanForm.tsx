@@ -38,7 +38,7 @@ interface Props {
   kategoriList: KategoriZIS[];
   currentUser: UserAmil | null;
   onCancel: () => void;
-  onSave: (payload: any, receiptData: any, isEdit: boolean) => Promise<boolean>;
+  onSave: (payload: any, receiptData: any, isEdit: boolean) => Promise<{ success: boolean; id: number }>;
 }
 
 export default function PenerimaanForm({ initialData, kategoriList, currentUser, onCancel, onSave }: Props) {
@@ -236,7 +236,14 @@ export default function PenerimaanForm({ initialData, kategoriList, currentUser,
       };
     }
 
-    await onSave(submitPayload, receiptData, !!initialData);
+    const result: any = await onSave(submitPayload, receiptData, !!initialData);
+    if(result.success && result.id){
+      const id = result.id;
+      if (id){
+      const pdfUrl = `${window.location.origin}/api/cetak-struk/${result.id}`;
+      window.open(pdfUrl, '_blank');
+      }
+    }
     setIsSubmitting(false);
   };
 

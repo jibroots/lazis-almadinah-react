@@ -188,17 +188,18 @@ export default function Home() {
         body: JSON.stringify(newData)
       });
 
+      const result  = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Gagal menyimpan data');
+        throw new Error(result.error || 'Gagal menyimpan data');
       }
 
       showNotification('success', 'Transaksi Penerimaan Berhasil Disimpan!');
       fetchPenerimaan();
-      return true;
+      return { success: true, id: result.id };
     } catch (error: any) {
       showNotification('error', error.message || 'Sistem bermasalah');
-      return false;
+      return { success: false, id: null };
     }
   };
 

@@ -4,6 +4,7 @@ import { X, AlertCircle, User, Calendar, CreditCard, UserPlus, Loader2, Send } f
 import PenerimaanTable from './PenerimaanTable';
 import PenerimaanForm from './PenerimaanForm';
 import { Penerimaan, KategoriZIS, UserAmil } from '@/types/lazis';
+import { AnyNaptrRecord } from 'dns';
 
 // Helper Regex untuk View
 const extractFitrahData = (keterangan: string | null, item: Penerimaan) => {
@@ -40,7 +41,7 @@ interface Props {
   kategoriList: KategoriZIS[];
   currentUser: UserAmil | null;
   isLoading: boolean;
-  onAdd: (newData: any) => Promise<boolean>;
+  onAdd: (newData: any) => Promise<{success: boolean, id: number }>;
   onEdit: (updatedData: any) => Promise<boolean>;
   onDelete: (id: number) => Promise<boolean>;
   formatRupiah: (num: number) => string;
@@ -70,22 +71,26 @@ export default function PenerimaanView({
   const [generatingItemId, setGeneratingItemId] = useState<number | null>(null);
 
   const handleSaveForm = async (payload: any, receiptData: any, isEdit: boolean) => {
-    if (isEdit && editingItem) {
-      const success = await onEdit({ ...payload, id: editingItem.id });
-      if (success) {
-        setViewMode('list');
-        setEditingItem(null);
-      }
-      return success;
-    } else {
-      const success = await onAdd(payload);
-      if (success) {
-        setViewMode('list');
-        setFitrahReceipt(receiptData);
-      }
-      return success;
+  if (isEdit && editingItem) {
+    // Tetap kembalikan success (dan kirim ID untuk cetak struk jika perlu)
+    const success = await onEdit({ ...payload, id: editingItem.id });
+    return { success: !!success, id: editingItem.id };
+    if (success) {
+      setViewMode('list');
+      setEditingItem(null);
     }
-  };
+  } else {
+    // --- PERUBAHAN DI SINI ---
+    // Pastikan onAdd sekarang mengembalikan object: { success: boolean, id: number | null }
+    const result: any = await onAdd(payload); 
+    
+    if (result.success) {
+      setViewMode('list');
+      setFitrahReceipt(receiptData);
+    }
+    return result; // Mengembalikan { success, id }
+  }
+};
 
   const handleDeleteConfirm = async () => {
     if (!deletingItem) return;
@@ -118,7 +123,7 @@ export default function PenerimaanView({
   const pdfUrl = `${window.location.origin}/api/cetak-struk/${item.id}`;
 
   // Teks WA yang rapi
-  const text = `Assalamu'alaikum Wr. Wb.\n\n🕌 *LAZIS AL-MADINAH*\n\nAlhamdulillah, kami telah menerima titipan ZIS dari Bapak/Ibu *${item.namaMuzakki}* sejumlah ${nominalText} untuk kategori *${item.kategoriId}*.\n\n📄 *Kuitansi Digital Resmi dapat dilihat dan diunduh pada tautan berikut:*\n${pdfUrl}\n\nSemoga Allah SWT memberkahi Bapak/Ibu dan keluarga. Aamiin Ya Rabbal 'Alamin.\n\n_Wassalamu'alaikum Wr. Wb._\n_Amil LAZIS Al-Madinah_`;
+  const text = `Assalamu'alaikum Wr. Wb.\n\n🕌 *LAZIS AL-MADINAH*\n\nAlhamdulillah, kami telah menerima titipan ZIS dari Bapak/Ibu *${item.namaMuzakki}* sejumlah ${nominalText} untuk kategori *${item.kategoriId}*.\n\n📄 *Kuitansi Digital Resmi dapat dilihat dan diunduh pada tautan berikut:*\n${pdfUrl}\n\nSilakan klik tautan di atas untuk melihat kuitansi. Anda dapat menyimpan kuitansi tersebut ke perangkat Anda dengan mengeklik ikon *Download* atau menu *Simpan* di browser Anda.\n\nSemoga Allah SWT memberkahi Bapak/Ibu dan keluarga. Aamiin Ya Rabbal 'Alamin.\n\n_Wassalamu'alaikum Wr. Wb._\n_Amil LAZIS Al-Madinah_`;
 
   // Langsung buka WhatsApp!
   window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(text)}`, '_blank');

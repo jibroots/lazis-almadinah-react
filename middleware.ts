@@ -34,5 +34,6 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/api/:path*', // Menjaga semua sub-folder di dalam folder api
+    '/((?!api/cetak-struk|api/auth|_next/static|_next/image|favicon.ico).*)', // Pengecualian di sini agar tidak memblokir API struk
   ],
 };
