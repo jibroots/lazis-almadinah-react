@@ -3,9 +3,10 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import prisma from '@/prisma.config'; // Sesuaikan jika lokasi import prisma Anda berbeda (misal: '@/lib/prisma')
 
 // Gunakan GET agar bisa diakses via URL / Link
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
     if (isNaN(id)) return NextResponse.json({ error: 'ID tidak valid' }, { status: 400 });
 
     // 1. Ambil data asli dari Database berdasarkan ID
@@ -88,13 +89,14 @@ export async function GET(request: Request, { params }: { params: { id: string }
     page.drawLine({ start: { x: 405, y: 50 }, end: { x: 555, y: 50 }, thickness: 1, color: grayColor });
 
     const pdfBytes = await pdfDoc.save();
+    const safeFilename = `Struk-LAZIS-${refNumber.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
 
     // 3. Kembalikan PDF (Gunakan 'inline' agar terbuka langsung di HP/Browser, bukan dipaksa download)
     return new NextResponse(Buffer.from(pdfBytes), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="Struk-LAZIS-${refNumber}.pdf"`,
+        'Content-Disposition': `inline; filename="Struk-LAZIS-${safeFilename}"`,
       },
     });
 
