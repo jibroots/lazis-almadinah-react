@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith('/api/cetak-struk')) {
+    return NextResponse.next();
+  }
   const { pathname } = request.nextUrl;
 
   // 1. Ambil token otentikasi dari Cookies browser
@@ -25,9 +28,6 @@ export function middleware(request: NextRequest) {
       );
     }
   }
-
-  // Jika memiliki token atau mengakses rute publik, izinkan request berlanjut
-  return NextResponse.next();
 }
 
 // 4. Batasi jalur kerja Middleware hanya untuk rute API demi efisiensi performa
