@@ -42,7 +42,7 @@ export default function Sidebar({
               />
           </div>
           <div>
-            <h2 className="font-extrabold text-white text-base tracking-tight leading-5">LAZIS AL-MADINAH</h2>
+            <h2 className="font-extrabold text-white text-base tracking-tight leading-5">LAZISWAF AL-MADINAH</h2>
           </div>
         </div>
         <button onClick={() => setSidebarOpen(false)} className="md:hidden text-emerald-300 hover:text-white">

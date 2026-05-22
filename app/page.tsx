@@ -14,9 +14,9 @@ import LoginPortal from '../components/LoginPortal';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import DashboardView from '../components/DashboardView';
-import PenerimaanView from '../components/PenerimaanView';
-import PenyaluranView from '../components/PenyaluranView';
-import KategoriView from '../components/KategoriView';
+import PenerimaanView from '../components/Penerimaan/PenerimaanView';
+import PenyaluranView from '../components/Penyaluran/PenyaluranView';
+import KategoriView from '../components/Kategori/KategoriView';
 import UserView from '../components/UserView';
 
 export default function Home() {
@@ -587,7 +587,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="h-12 bg-white border-t border-slate-200 shrink-0 px-6 flex items-center justify-center text-[10px] text-slate-550 font-bold uppercase tracking-wider">
-          @ LAZIS Al-Madinah System v1.0 • Internal Pengurus Masjid Al-Madinah • Jakarta
+          @ LAZISWAF Al-Madinah System v1.0 • Internal Pengurus Masjid Al-Madinah • Jakarta
         </footer>
 
       </div>

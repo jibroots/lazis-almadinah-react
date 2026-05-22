@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import PWAUpdater from '@/components/PWAUpdater';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,13 +23,13 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "SIM LAZIS Al-Madinah - Sistem Informasi ZIS",
+  title: "SIM LAZISWAF Al-Madinah - Sistem Informasi ZIS",
   description: "Sistem Informasi Zakat, Infaq, dan Sedekah Internal Masjid Al-Madinah",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "LAZIS Al-Madinah",
+    title: "LAZISWAF Al-Madinah",
   },
 };
 
@@ -62,7 +63,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <PWAUpdater />
+      </body>
     </html>
   );
 }

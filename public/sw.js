@@ -6,6 +6,12 @@ const ASSETS_TO_CACHE = [
   '/pwa-icon-512.png'
 ];
 
+self.addEventListener('message', (event) =>{
+  if (event.data.type === 'SKIP_WAITING'){
+    self.skipWaiting();
+  }
+});
+
 // Install Event: cache static shell assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
