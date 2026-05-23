@@ -180,13 +180,13 @@ export default function DashboardView({
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] bg-size-[12px_12px] pointer-events-none"></div>
         <div className="relative z-10 w-full">
           <span className="text-xs font-bold bg-emerald-950/40 border border-emerald-500/20 px-3 py-1 rounded-full text-emerald-300 uppercase tracking-wider">
-            Dashboard Pengurus LAZIS Masjid Al-Madinah
+            Dashboard Pengurus LAZISWaf Masjid Al-Madinah
           </span>
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mt-3 text-white">
             Assalamu'alaikum, {currentUser?.nama}!
           </h1>
           <p className="text-emerald-100/80 text-sm sm:text-base mt-2 font-light leading-relaxed">
-            Selamat datang di Sistem Informasi LAZIS Masjid Al-Madinah. Anda login sebagai <strong className="text-emerald-200 font-bold">{currentUser?.role}</strong>. Pantau arus masuk dan keluarnya dana serta stok beras secara transparan dan real-time.
+            Selamat datang di Sistem Informasi LAZISWaf Masjid Al-Madinah. Anda login sebagai <strong className="text-emerald-200 font-bold">{currentUser?.role}</strong>. Pantau arus masuk dan keluarnya dana serta stok beras secara transparan dan real-time.
           </p>
         </div>
       </div>
