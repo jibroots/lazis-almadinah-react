@@ -176,7 +176,7 @@ export default function PenerimaanView({
               >
                 <X className="w-5 h-5" />
               </button>
-              <div className="text-3xl inline-block p-2.5 bg-white/10 rounded-full border border-white/20">🕌</div>
+              {/*<div className="text-3xl inline-block p-2.5 bg-white/10 rounded-full border border-white/20">🕌</div>*/}
               <h3 className="font-extrabold uppercase tracking-widest text-xs text-emerald-300">Detail Arsip Penerimaan</h3>
               <h2 className="text-lg font-bold text-white leading-5">SIM LAZIS AL-MADINAH</h2>
             </div>
@@ -333,7 +333,7 @@ export default function PenerimaanView({
               <button onClick={() => setFitrahReceipt(null)} className="absolute right-4 top-4 text-white/80 hover:text-white cursor-pointer p-1 z-10 bg-black/10 rounded-full">
                 <X className="w-5 h-5" />
               </button>
-              <div className="text-4xl inline-block p-4 bg-white/10 rounded-full border border-white/20 relative z-10 shadow-lg">🧾</div>
+              {/*<div className="text-4xl inline-block p-4 bg-white/10 rounded-full border border-white/20 relative z-10 shadow-lg">🧾</div>*/}
               <h3 className="font-extrabold uppercase tracking-widest text-xs text-emerald-200 relative z-10 mt-3">KUITANSI DIGITAL BERHASIL</h3>
               <h2 className="text-xl font-bold text-white relative z-10">
                 {fitrahReceipt.isFitrah ? 'Zakat Fitrah Diterima' : 'Penerimaan Donasi Diterima'}

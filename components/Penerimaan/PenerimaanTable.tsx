@@ -63,7 +63,7 @@ export default function PenerimaanTable({
         <div>
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             <span className="text-2xl">📥</span>
-            Penerimaan Kas ZIS (Muzakki)
+            Penerimaan Kas ZISWaf
           </h2>
           <p className="text-xs text-slate-500 font-semibold mt-1">Kelola riwayat dana masuk serta donasi langsung masjid</p>
         </div>

@@ -501,10 +501,10 @@ export default function UserView({
               >
                 <X className="w-5 h-5" />
               </button>
-              <div className="text-3xl inline-block p-2.5 bg-white/10 rounded-full border border-white/20">
+              {/*<div className="text-3xl inline-block p-2.5 bg-white/10 rounded-full border border-white/20">
                 👥
-              </div>
-              <h3 className="font-extrabold uppercase tracking-widest text-xs text-emerald-350">Profil Amil Resmi</h3>
+              </div>*/}
+              <h3 className="font-extrabold uppercase tracking-widest text-xs text-emerald-350">Profil Pengurus Resmi</h3>
               <h2 className="text-lg font-bold text-white leading-5">{detailItem.nama}</h2>
             </div>
 
@@ -520,12 +520,12 @@ export default function UserView({
                   <span className="font-mono text-slate-800 font-extrabold bg-slate-100 px-2.5 py-1.5 rounded-xl border border-slate-200">{detailItem.username}</span>
                 </div>
 
-                {detailItem.password && (
+                {/*{detailItem.password && (
                   <div className="flex justify-between">
                     <span className="text-slate-500 font-bold flex items-center gap-1.5">🔑 Password Sandi:</span>
                     <span className="font-mono font-extrabold bg-amber-50 text-amber-900 px-2.5 py-1.5 rounded-xl border border-amber-250">{detailItem.password}</span>
                   </div>
-                )}
+                )}*/}
 
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-bold flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" /> Jabatan:</span>
@@ -542,7 +542,7 @@ export default function UserView({
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-slate-500 font-bold flex items-center gap-1.5">⚙️ Status Karyawan:</span>
+                  <span className="text-slate-500 font-bold flex items-center gap-1.5">⚙️ Status:</span>
                   <span className={`font-extrabold ${detailItem.status === 'Aktif' ? 'text-emerald-700' : 'text-slate-500 font-semibold'}`}>{detailItem.status}</span>
                 </div>
               </div>

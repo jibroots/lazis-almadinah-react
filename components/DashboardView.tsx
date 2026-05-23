@@ -191,30 +191,21 @@ export default function DashboardView({
         </div>
       </div>
 
-      {/* Balance Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Cash Balance */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
+      {/* Balance Metrics */}{/* Cash Balance */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-content hover:shadow-md transition-shadow">
           <div className="flex justify-between items-center">
             <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Total Hasil Penjualan Beras</span>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
               <Scale className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-4">
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <div className="mt-3">
+            <h3 className="text-2xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
               {formatRupiah(saldoUang)}
             </h3>
-            <div className="flex items-center gap-3 mt-3 text-[10px] font-semibold">
-              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-0.5">
-                <TrendingUp className="w-3 h-3" /> Pemasukan: {formatRupiah(totalPenerimaanUang)}
-              </span>
-              <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded flex items-center gap-0.5">
-                <TrendingDown className="w-3 h-3" /> Penyaluran: {formatRupiah(totalPenyaluranUang)}
-              </span>
-            </div>
           </div>
         </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
         {/* Rice Balance */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex justify-between items-center">
@@ -227,12 +218,12 @@ export default function DashboardView({
             <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               {saldoBeras} <span className="text-lg text-slate-500 font-bold">Liter</span>
             </h3>
-            <div className="flex items-center gap-3 mt-3 text-[10px] font-semibold">
-              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-0.5">
-                Masuk: {totalPenerimaanBeras} kg
+            <div className="flex items-center justify-between gap-3 mt-3 text-[10px] font-bold">
+              <span className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded flex items-center gap-0.5">
+                Penerimaan: {totalPenerimaanBeras} Liter
               </span>
-              <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded flex items-center gap-0.5">
-                Keluar: {totalPenyaluranBeras} kg
+              <span className="text-rose-600 bg-rose-50 px-3 py-1 rounded flex items-center gap-0.5">
+                Penyaluran: {totalPenyaluranBeras} Liter
               </span>
             </div>
           </div>
@@ -249,12 +240,12 @@ export default function DashboardView({
             <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               {formatRupiah(statsInfaqShodaqoh.saldo)}
             </h3>
-            <div className="flex items-center gap-3 mt-3 text-[10px] font-semibold">
-              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-0.5">
-                <TrendingUp className="w-3 h-3" /> Masuk: {formatRupiah(statsInfaqShodaqoh.penerimaan)}
+            <div className="flex items-center justify-between gap-3 mt-3 text-[10px] font-bold">
+              <span className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded flex items-center gap-0.5">
+                <TrendingUp className="w-3 h-3" /> Penerimaan: {formatRupiah(statsInfaqShodaqoh.penerimaan)}
               </span>
-              <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded flex items-center gap-0.5">
-                <TrendingDown className="w-3 h-3" /> Keluar: {formatRupiah(statsInfaqShodaqoh.penyaluran)}
+              <span className="text-rose-600 bg-rose-50 px-3 py-1 rounded flex items-center gap-0.5">
+                <TrendingDown className="w-3 h-3" /> Penyaluran: {formatRupiah(statsInfaqShodaqoh.penyaluran)}
               </span>
             </div>
           </div>
@@ -262,7 +253,7 @@ export default function DashboardView({
       </div>
 
       {/* Analytics Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
         
         {/* Chart Uang */}
         <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200">
@@ -339,7 +330,7 @@ export default function DashboardView({
                       <div className={`w-3 h-3 rounded-full ${d.color} shadow-sm`} />
                       {d.label}
                     </div>
-                    <div className="text-sm font-extrabold text-slate-800">{d.value} <span className="text-xs text-slate-500">kg</span></div>
+                    <div className="text-sm font-extrabold text-slate-800">{d.value} <span className="text-xs text-slate-500">Liter</span></div>
                     <div className="text-[10px] text-slate-400 font-semibold mt-0.5">{d.percentage}% dari total</div>
                   </div>
                 ))}
@@ -426,7 +417,7 @@ export default function DashboardView({
                 </div>
                 <div className="text-right">
                   {Number(item.jumlahUang) > 0 && <div className="font-extrabold text-emerald-600">{formatRupiah(Number(item.jumlahUang))}</div>}
-                  {Number(item.jumlahBeras) > 0 && <div className="font-extrabold text-amber-700 mt-0.5">🌾 {item.jumlahBeras} kg</div>}
+                  {Number(item.jumlahBeras) > 0 && <div className="font-extrabold text-amber-700 mt-0.5">🌾 {item.jumlahBeras} Liter</div>}
                 </div>
               </div>
             ))}
@@ -459,7 +450,7 @@ export default function DashboardView({
                 </div>
                 <div className="text-right">
                   {Number(item.jumlahUang) > 0 && <div className="font-extrabold text-rose-600">-{formatRupiah(Number(item.jumlahUang))}</div>}
-                  {Number(item.jumlahBeras) > 0 && <div className="font-extrabold text-rose-600 mt-0.5">🌾 -{item.jumlahBeras} kg</div>}
+                  {Number(item.jumlahBeras) > 0 && <div className="font-extrabold text-rose-600 mt-0.5">🌾 -{item.jumlahBeras} Liter</div>}
                 </div>
               </div>
             ))}

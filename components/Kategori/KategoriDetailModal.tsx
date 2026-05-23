@@ -22,9 +22,9 @@ export default function KategoriDetailModal({ item, onClose }: Props) {
           >
             <X className="w-5 h-5" />
           </button>
-          <div className="text-3xl inline-block p-2.5 bg-white/10 rounded-full border border-white/20">
+          {/*<div className="text-3xl inline-block p-2.5 bg-white/10 rounded-full border border-white/20">
             🏷️
-          </div>
+          </div>*/}
           <h3 className="font-extrabold uppercase tracking-widest text-xs text-emerald-300">Detail Parameter Kas</h3>
           <h2 className="text-lg font-bold text-white leading-5">{item.nama}</h2>
         </div>

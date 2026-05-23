@@ -139,7 +139,7 @@ async function buildReceiptPDF(data: any): Promise<Buffer> {
     y += 14;
 
     if (data.nomorHp) {
-      doc.font('Helvetica').fontSize(7).fillColor('#6b7280').text(`WhatsApp: ${data.nomorHp}`, MARGIN, y, { width: CONTENT_WIDTH });
+      doc.font('Helvetica').fontSize(6.5).fillColor('#6b7280').text(`WhatsApp: ${data.nomorHp}`, MARGIN, y, { width: CONTENT_WIDTH });
       y += 12;
     }
 
@@ -153,14 +153,14 @@ async function buildReceiptPDF(data: any): Promise<Buffer> {
     drawRow('Kategori ZIS', data.kategoriId.toUpperCase(), '#065f46');
 
     if (uang > 0) {
-      doc.rect(MARGIN, y, CONTENT_WIDTH, 26).fill('#ecfdf5');
+      doc.rect(MARGIN, y + 2, CONTENT_WIDTH, 26).fill('#ecfdf5');
       doc.font('Helvetica').fontSize(7).fillColor('#6b7280').text('Jumlah Uang', MARGIN + 6, y + 5, { lineBreak: false });
       doc.font('Helvetica-Bold').fontSize(12).fillColor('#065f46').text(formatRupiah(uang), MARGIN + 6, y + 14, { width: CONTENT_WIDTH - 12, align: 'right', lineBreak: false });
       y += 32;
     }
 
     if (beras > 0) {
-      doc.rect(MARGIN, y, CONTENT_WIDTH, 26).fill('#fffbeb');
+      doc.rect(MARGIN, y + 2, CONTENT_WIDTH, 26).fill('#fffbeb');
       doc.font('Helvetica').fontSize(7).fillColor('#92400e').text('Jumlah Beras', MARGIN + 6, y + 5, { lineBreak: false });
       doc.font('Helvetica-Bold').fontSize(12).fillColor('#92400e').text(`${beras} kg/Liter`, MARGIN + 6, y + 14, { width: CONTENT_WIDTH - 12, align: 'right', lineBreak: false });
       y += 32;
