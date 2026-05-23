@@ -30,7 +30,7 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Data States (initialized to empty arrays for database integration)
+  // Data States
   const [penerimaanList, setPenerimaanList] = useState<Penerimaan[]>([]);
   const [penyaluranList, setPenyaluranList] = useState<Penyaluran[]>([]);
   const [kategoriList, setKategoriList] = useState<KategoriZIS[]>([]);
@@ -39,9 +39,17 @@ export default function Home() {
   // Toast State
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // ----------------------------------------------------
-  // DATABASE SYNC & INITIALIZATION
-  // ----------------------------------------------------
+  // ====================================================
+  // 1. HELPER NOTIFIKASI (HARUS DI ATAS)
+  // ====================================================
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  // ====================================================
+  // 2. DATABASE SYNC & INITIALIZATION
+  // ====================================================
   const fetchPenerimaan = async () => {
     setIsLoading(true);
     try {
@@ -89,16 +97,13 @@ export default function Home() {
     }
   };
 
-  // Automatically initialize database with defaults on mount
   const initDatabaseAndLoad = async () => {
     setIsLoading(true);
     try {
-      // First, seed database if empty (ensures Super Admin and ZIS Categories are ready)
       const res = await fetch('/api/init');
       if (!res.ok) throw new Error('Gagal melakukan inisialisasi database');
       const initResult = await res.json();
       
-      // Check if user already has a valid JWT session
       const authRes = await fetch('/api/auth/me');
       if (authRes.ok) {
         const authData = await authRes.json();
@@ -109,7 +114,6 @@ export default function Home() {
       }
       setIsCheckingAuth(false);
 
-      // Load all records in parallel
       await Promise.all([
         fetchPenerimaan(),
         fetchPenyaluran(),
@@ -129,15 +133,12 @@ export default function Home() {
 
   useEffect(() => {
     initDatabaseAndLoad();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Notifications helper
-  const showNotification = (type: 'success' | 'error', message: string) => {
-    setNotification({ type, message });
-    setTimeout(() => setNotification(null), 4000);
-  };
-
-  // Auth Success Handler
+  // ====================================================
+  // 3. AUTH & CALCULATIONS
+  // ====================================================
   const handleLoginSuccess = (user: UserAmil) => {
     setCurrentUser(user);
     setIsLoggedIn(true);
@@ -156,9 +157,6 @@ export default function Home() {
     showNotification('success', 'Anda telah berhasil keluar dari sistem keamanan.');
   };
 
-  // ----------------------------------------------------
-  // CALCULATIONS (DASHBOARD STATS)
-  // ----------------------------------------------------
   const totalPenerimaanUang = penerimaanList.reduce((acc, curr) => acc + (Number(curr.jumlahUang) || 0), 0);
   const totalPenerimaanBeras = penerimaanList.reduce((acc, curr) => acc + (Number(curr.jumlahBeras) || 0), 0);
 
@@ -168,7 +166,6 @@ export default function Home() {
   const saldoUang = totalPenerimaanUang - totalPenyaluranUang;
   const saldoBeras = totalPenerimaanBeras - totalPenyaluranBeras;
 
-  // Format Helper
   const formatRupiah = (num: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -177,9 +174,9 @@ export default function Home() {
     }).format(num);
   };
 
-  // ----------------------------------------------------
-  // DB BACKED - PENERIMAAN CRUD HOOKS
-  // ----------------------------------------------------
+  // ====================================================
+  // 4. PENERIMAAN CRUD HOOKS
+  // ====================================================
   const handleAddPenerimaan = async (newData: any) => {
     try {
       const response = await fetch('/api/penerimaan', {
@@ -188,7 +185,7 @@ export default function Home() {
         body: JSON.stringify(newData)
       });
 
-      const result  = await response.json();
+      const result = await response.json();
 
       if (!response.ok) {
         throw new Error(result.error || 'Gagal menyimpan data');
@@ -196,10 +193,10 @@ export default function Home() {
 
       showNotification('success', 'Transaksi Penerimaan Berhasil Disimpan!');
       fetchPenerimaan();
-      return { success: true, id: result.id };
+      return { success: true, id: result.id, pdfUrl: result.pdfUrl };
     } catch (error: any) {
       showNotification('error', error.message || 'Sistem bermasalah');
-      return { success: false, id: null };
+      return { success: false, id: null, pdfUrl: null };
     }
   };
 
@@ -245,9 +242,9 @@ export default function Home() {
     }
   };
 
-  // ----------------------------------------------------
-  // DB BACKED - PENYALURAN CRUD HOOKS
-  // ----------------------------------------------------
+  // ====================================================
+  // 5. PENYALURAN CRUD HOOKS
+  // ====================================================
   const handleAddPenyaluran = async (newData: any) => {
     try {
       const response = await fetch('/api/penyaluran', {
@@ -317,9 +314,9 @@ export default function Home() {
     }
   };
 
-  // ----------------------------------------------------
-  // DB BACKED - KATEGORI CRUD HOOKS
-  // ----------------------------------------------------
+  // ====================================================
+  // 6. KATEGORI CRUD HOOKS
+  // ====================================================
   const handleAddKategori = async (newData: any) => {
     try {
       const response = await fetch('/api/kategori', {
@@ -384,9 +381,9 @@ export default function Home() {
     }
   };
 
-  // ----------------------------------------------------
-  // DB BACKED - USER AMIL CRUD HOOKS
-  // ----------------------------------------------------
+  // ====================================================
+  // 7. USER AMIL CRUD HOOKS
+  // ====================================================
   const handleAddUser = async (newData: any) => {
     try {
       const response = await fetch('/api/user', {
@@ -456,7 +453,9 @@ export default function Home() {
     }
   };
 
-  // Render Loading while checking authentication
+  // ====================================================
+  // 8. RENDER LOGIC
+  // ====================================================
   if (isCheckingAuth) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-slate-900">
@@ -468,7 +467,6 @@ export default function Home() {
     );
   }
 
-  // Render Login screen if not authenticated
   if (!isLoggedIn) {
     return (
       <LoginPortal 
@@ -478,7 +476,6 @@ export default function Home() {
     );
   }
 
-  // Render Dashboard main container if authenticated
   return (
     <div className="flex h-screen bg-slate-100 font-sans overflow-hidden text-slate-800">
       

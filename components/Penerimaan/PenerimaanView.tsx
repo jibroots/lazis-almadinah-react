@@ -4,7 +4,6 @@ import { X, AlertCircle, User, Calendar, CreditCard, UserPlus, Loader2, Send } f
 import PenerimaanTable from './PenerimaanTable';
 import PenerimaanForm from './PenerimaanForm';
 import { Penerimaan, KategoriZIS, UserAmil } from '@/types/lazis';
-import { AnyNaptrRecord } from 'dns';
 
 // Helper Regex untuk View
 const extractFitrahData = (keterangan: string | null, item: Penerimaan) => {
@@ -41,7 +40,8 @@ interface Props {
   kategoriList: KategoriZIS[];
   currentUser: UserAmil | null;
   isLoading: boolean;
-  onAdd: (newData: any) => Promise<{success: boolean, id: number }>;
+  // UPDATE: Menyesuaikan tipe balikan agar mengenali pdfUrl dari Supabase
+  onAdd: (newData: any) => Promise<{ success: boolean; id: number | null; pdfUrl: string | null }>;
   onEdit: (updatedData: any) => Promise<boolean>;
   onDelete: (id: number) => Promise<boolean>;
   formatRupiah: (num: number) => string;
@@ -71,26 +71,24 @@ export default function PenerimaanView({
   const [generatingItemId, setGeneratingItemId] = useState<number | null>(null);
 
   const handleSaveForm = async (payload: any, receiptData: any, isEdit: boolean) => {
-  if (isEdit && editingItem) {
-    // Tetap kembalikan success (dan kirim ID untuk cetak struk jika perlu)
-    const success = await onEdit({ ...payload, id: editingItem.id });
-    return { success: !!success, id: editingItem.id };
-    if (success) {
-      setViewMode('list');
-      setEditingItem(null);
+    if (isEdit && editingItem) {
+      const success = await onEdit({ ...payload, id: editingItem.id });
+      if (success) {
+        setViewMode('list');
+        setEditingItem(null);
+      }
+      return { success: !!success, id: editingItem.id, pdfUrl: null };
+    } else {
+      const result: any = await onAdd(payload); 
+      
+      if (result.success) {
+        setViewMode('list');
+        // KUNCI UTAMA: Gabungkan receiptData dengan pdfUrl dari Supabase
+        setFitrahReceipt({ ...receiptData, pdfUrl: result.pdfUrl }); 
+      }
+      return result; 
     }
-  } else {
-    // --- PERUBAHAN DI SINI ---
-    // Pastikan onAdd sekarang mengembalikan object: { success: boolean, id: number | null }
-    const result: any = await onAdd(payload); 
-    
-    if (result.success) {
-      setViewMode('list');
-      setFitrahReceipt(receiptData);
-    }
-    return result; // Mengembalikan { success, id }
-  }
-};
+  };
 
   const handleDeleteConfirm = async () => {
     if (!deletingItem) return;
@@ -103,31 +101,31 @@ export default function PenerimaanView({
   };
 
   const handleSendWA = (item: Penerimaan) => {
-  if (!item.nomorHp) {
-    alert('Nomor WhatsApp tidak tersedia untuk donatur ini.');
-    return;
-  }
+    if (!item.nomorHp) {
+      alert('Nomor WhatsApp tidak tersedia untuk donatur ini.');
+      return;
+    }
 
-  // Karena backend yang memproses PDF, UI tidak perlu loading lagi!
-  const waNumber = item.nomorHp.replace(/\D/g, '').replace(/^0/, '62');
-  const totalRp = Number(item.jumlahUang) || 0;
-  const totalKg = Number(item.jumlahBeras) || 0;
+    const waNumber = item.nomorHp.replace(/\D/g, '').replace(/^0/, '62');
+    const totalRp = Number(item.jumlahUang) || 0;
+    const totalKg = Number(item.jumlahBeras) || 0;
 
-  // Format teks nominal
-  const nominalText = [
-    totalRp > 0 ? `*Rp ${new Intl.NumberFormat('id-ID').format(totalRp)}*` : '',
-    totalKg > 0 ? `*Beras ${totalKg} kg/Liter*` : '',
-  ].filter(Boolean).join(' dan ');
+    const nominalText = [
+      totalRp > 0 ? `*Rp ${new Intl.NumberFormat('id-ID').format(totalRp)}*` : '',
+      totalKg > 0 ? `*Beras ${totalKg} kg/Liter*` : '',
+    ].filter(Boolean).join(' dan ');
 
-  // KUNCI UTAMA: Tautan dinamis ke API Endpoint kita
-  const pdfUrl = `${window.location.origin}/api/cetak-struk/${item.id}`;
+    // CATATAN: Untuk tombol "Kirim WA" yang ada di dalam tabel (data lama),
+    // kita tetap menggunakan API lokal sebagai fallback karena data lama belum punya link Supabase.
+    const supabaseBaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const pdfUrl = supabaseBaseUrl 
+      ? `${supabaseBaseUrl}/storage/v1/object/public/struk-penerimaan/struk-${item.id}.pdf`
+      : `${window.location.origin}/api/cetak-struk/${item.id}`; // Fallback aman
 
-  // Teks WA yang rapi
-  const text = `Assalamu'alaikum Wr. Wb.\n\n🕌 *LAZIS AL-MADINAH*\n\nAlhamdulillah, kami telah menerima titipan ZIS dari Bapak/Ibu *${item.namaMuzakki}* sejumlah ${nominalText} untuk kategori *${item.kategoriId}*.\n\n📄 *Kuitansi Digital Resmi dapat dilihat dan diunduh pada tautan berikut:*\n${pdfUrl}\n\nSilakan klik tautan di atas untuk melihat kuitansi. Anda dapat menyimpan kuitansi tersebut ke perangkat Anda dengan mengeklik ikon *Download* atau menu *Simpan* di browser Anda.\n\nSemoga Allah SWT memberkahi Bapak/Ibu dan keluarga. Aamiin Ya Rabbal 'Alamin.\n\n_Wassalamu'alaikum Wr. Wb._\n_Amil LAZIS Al-Madinah_`;
+    const text = `Assalamu'alaikum Wr. Wb.\n\n🕌 *LAZIS AL-MADINAH*\n\nAlhamdulillah, kami telah menerima titipan ZIS dari Bapak/Ibu *${item.namaMuzakki}* sejumlah ${nominalText} untuk kategori *${item.kategoriId}*.\n\n📄 *Kuitansi Digital Resmi dapat dilihat dan diunduh pada tautan berikut:*\n${pdfUrl}\n\nSilakan klik tautan di atas untuk melihat kuitansi. Anda dapat menyimpan kuitansi tersebut ke perangkat Anda dengan mengeklik ikon *Download* atau menu *Simpan* di browser Anda.\n\nSemoga Allah SWT memberkahi Bapak/Ibu dan keluarga. Aamiin Ya Rabbal 'Alamin.\n\n_Wassalamu'alaikum Wr. Wb._\n_Amil LAZIS Al-Madinah_`;
 
-  // Langsung buka WhatsApp!
-  window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(text)}`, '_blank');
-};
+    window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(text)}`, '_blank');
+  };
 
   if (viewMode === 'add' || viewMode === 'edit') {
     return (
@@ -379,20 +377,21 @@ export default function PenerimaanView({
                 <button
                   onClick={() => {
                     const waNum = fitrahReceipt.whatsapp?.replace(/^0/, '62') || '';
-                    const rincianBeras = fitrahReceipt.jumlahUang > 0 ? formatRupiah(fitrahReceipt.jumlahUang) : `${fitrahReceipt.jumlahBeras} ${fitrahReceipt.isFitrah ? 'Liter' : 'kg'} Beras`;
-                    const sisaInfaq = fitrahReceipt.infaqAmount > 0 ? `\nInfaq Kembalian: ${formatRupiah(fitrahReceipt.infaqAmount)}\n` : '';
+                    const totalRp = Number(fitrahReceipt.jumlahUang) || 0;
+                    const totalKg = Number(fitrahReceipt.jumlahBeras) || 0;
+
+                    const nominalText = [
+                      totalRp > 0 ? `*Rp ${new Intl.NumberFormat('id-ID').format(totalRp)}*` : '',
+                      totalKg > 0 ? `*Beras ${totalKg} ${fitrahReceipt.isFitrah ? 'Liter' : 'kg'}*` : '',
+                    ].filter(Boolean).join(' dan ');
                     
-                    let msg = '';
-                    if (fitrahReceipt.isFitrah) {
-                      msg = `*KUITANSI ZAKAT FITRAH*\n*LAZIS AL-MADINAH*\n\nBismillah, Alhamdulillah telah diterima pembayaran Zakat Fitrah atas nama *${fitrahReceipt.nama}* beserta tanggungan (Total *${fitrahReceipt.totalJiwa} Jiwa*).\n\nNominal Zakat: ${rincianBeras}${sisaInfaq}\nSemoga Allah Ta'ala menerima amalan Zakat Fitrah keluarga Bapak/Ibu, menjadikannya pembersih jiwa, dan memberikan keberkahan pada harta yang tersisa. Aamiin Ya Rabbal 'Alamin.\n\n_Wassalamu'alaikum Warahmatullahi Wabarakatuh_\n_Amil LAZIS Al-Madinah_`;
-                    } else {
-                      msg = `*KUITANSI PENERIMAAN ZIS*\n*LAZIS AL-MADINAH*\n\nBismillah, Alhamdulillah telah diterima donasi untuk kategori *${fitrahReceipt.kategori}* atas nama *${fitrahReceipt.nama}*.\n\nNominal Donasi: ${rincianBeras}\n\nSemoga Allah Ta'ala menerima amalan Bapak/Ibu, menjadikannya pembersih jiwa, dan memberikan keberkahan pada harta yang tersisa. Aamiin Ya Rabbal 'Alamin.\n\n_Wassalamu'alaikum Warahmatullahi Wabarakatuh_\n_Amil LAZIS Al-Madinah_`;
-                    }
+                    // Merakit pesan yang memanggil tautan Supabase
+                    const msg = `Assalamu'alaikum Wr. Wb.\n\n🕌 *LAZIS AL-MADINAH*\n\nAlhamdulillah, kami telah menerima titipan ZIS dari Bapak/Ibu *${fitrahReceipt.nama.trim()}* sejumlah ${nominalText} untuk kategori *${fitrahReceipt.kategori}*.\n\n📄 *Kuitansi Digital Resmi:*\n${fitrahReceipt.pdfUrl || 'Tautan PDF sedang disinkronisasi, silakan cek tabel riwayat.'}\n\n💡 *Catatan:* Silakan klik tautan di atas untuk melihat dan menyimpan kuitansi.\n\nSemoga Allah SWT memberkahi Bapak/Ibu dan keluarga. Aamiin Ya Rabbal 'Alamin.\n\n_Wassalamu'alaikum Wr. Wb._\n_Amil LAZIS Al-Madinah_`;
                     
                     const url = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
                     window.open(url, '_blank');
                   }}
-                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:bg-slate-300 text-white rounded-xl shadow-[0_8px_16px_-4px_rgba(5,150,105,0.4)] font-extrabold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all hover:-translate-y-0.5"
+                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl shadow-lg font-extrabold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all hover:-translate-y-0.5"
                 >
                   <Send className="w-5 h-5" />
                   Kirim Kuitansi via WhatsApp

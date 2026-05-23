@@ -38,7 +38,7 @@ interface Props {
   kategoriList: KategoriZIS[];
   currentUser: UserAmil | null;
   onCancel: () => void;
-  onSave: (payload: any, receiptData: any, isEdit: boolean) => Promise<{ success: boolean; id: number }>;
+  onSave: (payload: any, receiptData: any, isEdit: boolean) => Promise<{ success: boolean; id: number | null; pdfUrl?: string | null }>;
 }
 
 export default function PenerimaanForm({ initialData, kategoriList, currentUser, onCancel, onSave }: Props) {
@@ -209,7 +209,7 @@ export default function PenerimaanForm({ initialData, kategoriList, currentUser,
         isFitrah: true,
         totalJiwa,
         hargaBerasItem,
-        nominalBayar: Number(nominalBayar.replace(/\D/g, '')),
+        nominalBayar: Number(String(nominalBayar).replace(/\D/g, '')),
         kembalian,
         infaqAmount,
         tanggal: new Date()
@@ -225,7 +225,7 @@ export default function PenerimaanForm({ initialData, kategoriList, currentUser,
         jumlahUang: uangVal,
         jumlahBeras: berasVal,
         metode: form.metode,
-        keterangan: form.keterangan.trim() || null,
+        keterangan: form.keterangan ? form.keterangan.trim() : null,
         amilPenerima: form.amilPenerima || currentUser?.nama || 'Sistem'
       };
 
@@ -236,14 +236,8 @@ export default function PenerimaanForm({ initialData, kategoriList, currentUser,
       };
     }
 
-    const result: any = await onSave(submitPayload, receiptData, !!initialData);
-    if(result.success && result.id){
-      const id = result.id;
-      if (id){
-      const pdfUrl = `${window.location.origin}/api/cetak-struk/${result.id}`;
-      window.open(pdfUrl, '_blank');
-      }
-    }
+    // Pemanggilan onSave harus berada DI DALAM blok handleSubmit
+    await onSave(submitPayload, receiptData, !!initialData);
     setIsSubmitting(false);
   };
 
