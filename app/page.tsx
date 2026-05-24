@@ -18,6 +18,7 @@ import PenerimaanView from '../components/Penerimaan/PenerimaanView';
 import PenyaluranView from '../components/Penyaluran/PenyaluranView';
 import KategoriView from '../components/Kategori/KategoriView';
 import UserView from '../components/UserView';
+import MonthlyReport from '@/components/Report/MonthlyReport';
 
 export default function Home() {
   // Authentication States
@@ -26,7 +27,7 @@ export default function Home() {
   const [currentUser, setCurrentUser] = useState<UserAmil | null>(null);
 
   // Navigation & UI States
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'penerimaan' | 'penyaluran' | 'kategori' | 'user'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'penerimaan' | 'penyaluran' | 'kategori' | 'user' | 'report'>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -97,6 +98,17 @@ export default function Home() {
     }
   };
 
+  const loadAllData = async () => {
+    setIsLoading(true);
+    await Promise.all([
+      fetchPenerimaan(),
+      fetchPenyaluran(),
+      fetchKategori(),
+      fetchUser()
+    ]);
+    setIsLoading(false);
+  };
+
   const initDatabaseAndLoad = async () => {
     setIsLoading(true);
     try {
@@ -110,6 +122,8 @@ export default function Home() {
         if (authData.authenticated) {
           setCurrentUser(authData.user);
           setIsLoggedIn(true);
+          // Setelah validasi login, langsung tarik data
+          await loadAllData();
         }
       }
       setIsCheckingAuth(false);
@@ -134,6 +148,15 @@ export default function Home() {
   useEffect(() => {
     initDatabaseAndLoad();
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleLoginSuccess = async (user: UserAmil) => {
+    setCurrentUser(user);
+    setIsLoggedIn(true);
+    showNotification('success', `Selamat Datang, ${user.nama}! Anda masuk sebagai ${user.role}.`);
+    setActiveTab('dashboard');
+    
+    // TARIK DATA BEGITU LOGIN BERHASIL
+    await loadAllData(); 
+  };
   }, []);
 
   // ====================================================
@@ -558,6 +581,14 @@ export default function Home() {
                 onEdit={handleEditPenyaluran}
                 onDelete={handleDeletePenyaluran}
                 formatRupiah={formatRupiah}
+              />
+            )}
+
+            {/* TAB LAPORAN BARU DITAMBAHKAN DI SINI */}
+            {activeTab === 'report' && (
+              <MonthlyReport 
+                penerimaanData={penerimaanList}
+                penyaluranData={penyaluranList}
               />
             )}
 

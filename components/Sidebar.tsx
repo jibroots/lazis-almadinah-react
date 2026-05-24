@@ -6,13 +6,14 @@ import {
   Layers, 
   Users, 
   X, 
-  LogOut 
+  LogOut, 
+  Printer
 } from 'lucide-react';
 import { UserAmil } from '../types/lazis';
 
 interface SidebarProps {
-  activeTab: 'dashboard' | 'penerimaan' | 'penyaluran' | 'kategori' | 'user';
-  setActiveTab: (tab: 'dashboard' | 'penerimaan' | 'penyaluran' | 'kategori' | 'user') => void;
+  activeTab: 'dashboard' | 'penerimaan' | 'penyaluran' | 'kategori' | 'user' | 'report';
+  setActiveTab: (tab: 'dashboard' | 'penerimaan' | 'penyaluran' | 'kategori' | 'user' | 'report') => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   currentUser: UserAmil | null;
@@ -57,6 +58,7 @@ export default function Sidebar({
           { id: 'penerimaan', label: 'Penerimaan', icon: ArrowDownLeft },
           { id: 'penyaluran', label: 'Penyaluran', icon: ArrowUpRight },
           { id: 'kategori', label: 'Kategori ZIS', icon: Layers },
+          { id: 'report', label: 'Laporan Bulanan', icon: Printer },
           { id: 'user', label: 'Pengaturan User', icon: Users },
         ].map((item) => {
           const Icon = item.icon;
