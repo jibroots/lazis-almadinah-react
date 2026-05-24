@@ -162,7 +162,7 @@ async function buildReceiptPDF(data: any): Promise<Buffer> {
     if (beras > 0) {
       doc.rect(MARGIN, y + 2, CONTENT_WIDTH, 26).fill('#fffbeb');
       doc.font('Helvetica').fontSize(7).fillColor('#92400e').text('Jumlah Beras', MARGIN + 6, y + 5, { lineBreak: false });
-      doc.font('Helvetica-Bold').fontSize(12).fillColor('#92400e').text(`${beras} kg/Liter`, MARGIN + 6, y + 14, { width: CONTENT_WIDTH - 12, align: 'right', lineBreak: false });
+      doc.font('Helvetica-Bold').fontSize(12).fillColor('#92400e').text(`${beras} Liter`, MARGIN + 6, y + 14, { width: CONTENT_WIDTH - 12, align: 'right', lineBreak: false });
       y += 32;
     }
 

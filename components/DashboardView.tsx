@@ -174,7 +174,7 @@ export default function DashboardView({
 
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-5 animate-fadeIn">
       {/* Dashboard Banner */}
       <div className="bg-linear-to-r from-emerald-800 to-teal-800 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-lg">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] bg-size-[12px_12px] pointer-events-none"></div>
@@ -253,7 +253,7 @@ export default function DashboardView({
       </div>
 
       {/* Analytics Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-5">
         
         {/* Chart Uang */}
         <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200">

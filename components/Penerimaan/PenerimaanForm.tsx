@@ -166,7 +166,7 @@ export default function PenerimaanForm({ initialData, kategoriList, currentUser,
   };
 
   const handleAddAnggota = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
+    if (e.key === 'Enter') {
       e.preventDefault();
       const newName = anggotaInput.trim().replace(/,/g, '');
       if (newName !== '') {
@@ -360,7 +360,27 @@ export default function PenerimaanForm({ initialData, kategoriList, currentUser,
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Tanggungan Anggota Keluarga (Opsional)</label>
                 <div className="relative">
                   <UserPlus className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-600" />
-                  <input type="text" value={anggotaInput} onChange={(e) => setAnggotaInput(e.target.value)} onKeyDown={handleAddAnggota} placeholder="Ketik nama lalu Enter atau koma (,)..." className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white" />
+                  <input 
+                  type="text" 
+                  value={anggotaInput} 
+                  onChange={(e) => {
+                      const val = e.target.value;
+                      if (val.includes(',')) {
+                        const newName = val.replace(/,/g, '').trim();
+                        if (newName !== '') {
+                          setAnggotaKeluarga(prev => [...prev, newName]);
+                        }
+                        setAnggotaInput('');
+                      } else {
+                        setAnggotaInput(val);
+                      }
+                    }} 
+                    onKeyDown={handleAddAnggota}
+                    // Instruksikan keyboard HP untuk menampilkan tombol "Enter" bukan "Next"
+                    enterKeyHint="enter"
+                    placeholder="Ketik nama lalu Enter atau koma (,)..." 
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white" 
+                    />
                 </div>
                 {anggotaKeluarga.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
