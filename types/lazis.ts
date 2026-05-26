@@ -19,6 +19,8 @@ export interface Penyaluran {
   jumlahBeras: number;
   tanggalPenyaluran: string;
   keterangan: string | null;
+  rt: string | null;
+  rw: string | null;
   amilPenyalur: string | null;
 }
 

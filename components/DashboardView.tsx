@@ -12,28 +12,19 @@ import {
 } from 'lucide-react';
 import { UserAmil, Penerimaan, Penyaluran } from '../types/lazis';
 
+// Ganti baris interface DashboardViewProps menjadi:
 interface DashboardViewProps {
   currentUser: UserAmil | null;
-  saldoUang: number;
-  totalPenerimaanUang: number;
-  totalPenyaluranUang: number;
-  saldoBeras: number;
-  totalPenerimaanBeras: number;
-  totalPenyaluranBeras: number;
+  dataSaldo: any; // Menerima objek brankas dari page.tsx
   penerimaanList: Penerimaan[];
   penyaluranList: Penyaluran[];
-  setActiveTab: (tab: 'dashboard' | 'penerimaan' | 'penyaluran' | 'kategori' | 'user') => void;
+  setActiveTab: (tab: 'dashboard' | 'penerimaan' | 'penyaluran' | 'kategori' | 'user' | 'report') => void;
   formatRupiah: (num: number) => string;
 }
 
 export default function DashboardView({
   currentUser,
-  saldoUang,
-  totalPenerimaanUang,
-  totalPenyaluranUang,
-  saldoBeras,
-  totalPenerimaanBeras,
-  totalPenyaluranBeras,
+  dataSaldo,
   penerimaanList,
   penyaluranList,
   setActiveTab,
@@ -57,14 +48,16 @@ export default function DashboardView({
       let group = 'Lainnya';
       if (cat.includes('fitrah')) group = 'Zakat Fitrah';
       else if (cat.includes('maal') || cat.includes('mal')) group = 'Zakat Maal';
+      else if (cat.includes('yatim')) group = 'Dana Yatim';
       else if (cat.includes('infaq') || cat.includes('sedekah') || cat.includes('shodaqoh')) group = 'Infaq & Sedekah';
       else if (cat.includes('fidyah')) group = 'Fidyah';
       
       const totalUang = Number(curr.jumlahUang) || 0;
       
       if (embeddedInfaq > 0 && group !== 'Infaq & Sedekah') {
-        // Kurangi jumlah dari grup asal (misal Zakat Fitrah) dan pindahkan sisa kembaliannya ke Infaq & Sedekah
-        acc[group] = (acc[group] || 0) + (totalUang - embeddedInfaq);
+        // Karena jumlahUang di database sudah net (hanya tagihan fitrah), 
+        // kita tidak perlu mengurangi dari group asal. Cukup tambahkan sisa kembalian ke Infaq.
+        acc[group] = (acc[group] || 0) + totalUang;
         acc['Infaq & Sedekah'] = (acc['Infaq & Sedekah'] || 0) + embeddedInfaq;
       } else {
         acc[group] = (acc[group] || 0) + totalUang;
@@ -79,6 +72,7 @@ export default function DashboardView({
       { label: 'Zakat Fitrah', value: groups['Zakat Fitrah'] || 0, color: 'bg-emerald-500' },
       { label: 'Zakat Maal', value: groups['Zakat Maal'] || 0, color: 'bg-teal-600' },
       { label: 'Infaq & Sedekah', value: groups['Infaq & Sedekah'] || 0, color: 'bg-amber-500' },
+      { label: 'Dana Yatim', value: groups['Dana Yatim'] || 0, color: 'bg-purple-500' },
       { label: 'Lainnya (Fidyah, dll)', value: (groups['Lainnya'] || 0) + (groups['Fidyah'] || 0), color: 'bg-blue-500' },
     ].filter(item => item.value > 0)
      .sort((a, b) => b.value - a.value)
@@ -92,6 +86,7 @@ export default function DashboardView({
       let group = 'Lainnya';
       if (cat.includes('fitrah')) group = 'Zakat Fitrah';
       else if (cat.includes('fidyah')) group = 'Fidyah';
+      else if (cat.includes('yatim')) group = 'Dana Yatim';
       else if (cat.includes('kifarat') || cat.includes('kafarat')) group = 'Kifarat';
       
       acc[group] = (acc[group] || 0) + Number(curr.jumlahBeras);
@@ -104,6 +99,7 @@ export default function DashboardView({
     return [
       { label: 'Zakat Fitrah', value: groups['Zakat Fitrah'] || 0, color: 'bg-emerald-500' },
       { label: 'Fidyah', value: groups['Fidyah'] || 0, color: 'bg-amber-600' },
+      { label: 'Dana Yatim', value: groups['Dana Yatim'] || 0, color: 'bg-purple-500' },
       { label: 'Kifarat & Lainnya', value: (groups['Lainnya'] || 0) + (groups['Kifarat'] || 0), color: 'bg-blue-500' },
     ].filter(item => item.value > 0)
      .sort((a, b) => b.value - a.value)
@@ -152,6 +148,7 @@ export default function DashboardView({
       
       if (cat.includes('fitrah')) group = 'Zakat Fitrah';
       else if (cat.includes('maal') || cat.includes('mal')) group = 'Zakat Maal';
+      else if (cat.includes('yatim')) group = 'Dana Yatim';
       else if (cat.includes('infaq') || cat.includes('sedekah') || cat.includes('shodaqoh')) group = 'Infaq & Sedekah';
       else if (cat.includes('fidyah')) group = 'Fidyah';
       
@@ -166,6 +163,7 @@ export default function DashboardView({
       { label: 'Zakat Fitrah', value: groups['Zakat Fitrah'] || 0, color: 'bg-emerald-500' },
       { label: 'Zakat Maal', value: groups['Zakat Maal'] || 0, color: 'bg-teal-600' },
       { label: 'Infaq & Sedekah', value: groups['Infaq & Sedekah'] || 0, color: 'bg-amber-500' },
+      { label: 'Dana Yatim', value: groups['Dana Yatim'] || 0, color: 'bg-purple-500' },
       { label: 'Lainnya (Fidyah, dll)', value: (groups['Lainnya'] || 0) + (groups['Fidyah'] || 0), color: 'bg-blue-500' },
     ].filter(item => item.value > 0)
      .sort((a, b) => b.value - a.value)
@@ -191,64 +189,51 @@ export default function DashboardView({
         </div>
       </div>
 
-      {/* Balance Metrics */}{/* Cash Balance */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-content hover:shadow-md transition-shadow">
+      {/* Balance Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        {/* KAS PENJUALAN BERAS (KHUSUS) */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-center">
-            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Total Hasil Penjualan Beras</span>
+            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Hasil Jual Beras</span>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
               <Scale className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-3">
-            <h3 className="text-2xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
-              {formatRupiah(saldoUang)}
-            </h3>
-          </div>
+          <h3 className="mt-3 text-2xl font-extrabold text-slate-900">{formatRupiah(dataSaldo.uangKasBeras)}</h3>
         </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-        {/* Rice Balance */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
+
+        {/* TOTAL DANA SIAP SALUR (Uang) */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-center">
-            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Total Penerimaan Beras</span>
+            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Total ZIS</span>
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+          </div>
+          <h3 className="mt-3 text-2xl font-extrabold text-slate-900">{formatRupiah(dataSaldo.totalUangSiapSalur)}</h3>
+        </div>
+
+        {/* TOTAL DANA YATIM */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Total Dana Yatim</span>
+            <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+              <Heart className="w-5 h-5" />
+            </div>
+          </div>
+          <h3 className="mt-3 text-2xl font-extrabold text-slate-900">{formatRupiah(dataSaldo.totalDanaYatim || 0)}</h3>
+        </div>
+
+        {/* TOTAL BERAS SIAP SALUR */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Total Beras</span>
             <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
               <span className="text-lg">🌾</span>
             </div>
           </div>
-          <div className="mt-4">
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              {saldoBeras} <span className="text-lg text-slate-500 font-bold">Liter</span>
-            </h3>
-            <div className="flex items-center justify-between gap-3 mt-3 text-[10px] font-bold">
-              <span className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded flex items-center gap-0.5">
-                Penerimaan: {totalPenerimaanBeras} Liter
-              </span>
-              <span className="text-rose-600 bg-rose-50 px-3 py-1 rounded flex items-center gap-0.5">
-                Penyaluran: {totalPenyaluranBeras} Liter
-              </span>
-            </div>
-          </div>
-        </div>
-        {/* Infaq & Shodaqoh Balance */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
-          <div className="flex justify-between items-center">
-            <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Saldo Infaq & Sedekah</span>
-            <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-650">
-              <Heart className="w-5 h-5 fill-rose-500 text-rose-500" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              {formatRupiah(statsInfaqShodaqoh.saldo)}
-            </h3>
-            <div className="flex items-center justify-between gap-3 mt-3 text-[10px] font-bold">
-              <span className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded flex items-center gap-0.5">
-                <TrendingUp className="w-3 h-3" /> Penerimaan: {formatRupiah(statsInfaqShodaqoh.penerimaan)}
-              </span>
-              <span className="text-rose-600 bg-rose-50 px-3 py-1 rounded flex items-center gap-0.5">
-                <TrendingDown className="w-3 h-3" /> Penyaluran: {formatRupiah(statsInfaqShodaqoh.penyaluran)}
-              </span>
-            </div>
-          </div>
+          <h3 className="mt-3 text-2xl font-extrabold text-slate-900">{dataSaldo.totalBerasSiapSalur} <span className="text-sm">Ltr</span></h3>
         </div>
       </div>
 

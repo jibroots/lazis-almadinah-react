@@ -7,9 +7,10 @@ interface Props {
   item: Penyaluran | null;
   onClose: () => void;
   formatRupiah: (num: number) => string;
+  getNamaKategori: (id: string) => string;
 }
 
-export default function PenyaluranDetailModal({ item, onClose, formatRupiah }: Props) {
+export default function PenyaluranDetailModal({ item, onClose, formatRupiah, getNamaKategori }: Props) {
   if (!item) return null;
 
   return (
@@ -60,7 +61,7 @@ export default function PenyaluranDetailModal({ item, onClose, formatRupiah }: P
             <div className="flex justify-between">
               <span className="text-slate-500 font-bold flex items-center gap-1.5">⚖️ Sumber Kas:</span>
               <span className="font-extrabold text-rose-800 bg-rose-50 px-2.5 py-0.5 rounded border border-rose-150 uppercase text-[10px]">
-                {item.kategoriId}
+                {getNamaKategori(item.kategoriId)}
               </span>
             </div>
 

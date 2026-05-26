@@ -9,11 +9,14 @@ const prisma = new PrismaClient({ adapter });
 
 // Zod Validation Schema
 const penyaluranSchema = z.object({
-  namaMustahik: z.string().min(1, 'Nama Mustahik/Penerima wajib diisi!'),
-  kategoriId: z.string().min(1, 'Kategori ZIS wajib dipilih!'),
-  jumlahUang: z.preprocess((val) => Number(val) || 0, z.number().nonnegative('Jumlah uang tidak boleh bernilai negatif!')),
-  jumlahBeras: z.preprocess((val) => Number(val) || 0, z.number().nonnegative('Jumlah beras tidak boleh bernilai negatif!')),
+  namaMustahik: z.string().min(1, "Nama Mustahik wajib diisi"),
+  kategoriId: z.string().min(1, "Kategori wajib dipilih"), // Jika id kategori Anda berupa angka, ganti jadi z.number()
+  jumlahUang: z.number().min(0).optional(),
+  jumlahBeras: z.number().min(0).optional(),
   keterangan: z.string().optional().nullable(),
+  // DUA BARIS INI KUNCI UTAMANYA:
+  rt: z.string().optional().nullable(),
+  rw: z.string().optional().nullable()
 });
 
 // GET: Ambil data penyaluran
@@ -38,10 +41,11 @@ export async function POST(request: Request) {
     // Validate request schema
     const validation = penyaluranSchema.safeParse(body);
     if (!validation.success) {
+      console.log("❌ ERROR VALIDASI ZOD:", validation.error.format());
       return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 });
     }
 
-    const { namaMustahik, kategoriId, jumlahUang, jumlahBeras, keterangan } = validation.data;
+    const { namaMustahik, kategoriId, jumlahUang, jumlahBeras, keterangan, rt, rw } = validation.data;
 
     const dataBaru = await prisma.penyaluran.create({
       data: {
@@ -49,7 +53,9 @@ export async function POST(request: Request) {
         kategoriId,
         jumlahUang,
         jumlahBeras,
-        keterangan: keterangan || null
+        keterangan: keterangan || null,
+        rt: rt || null,
+        rw: rw || null
       }
     });
 
@@ -75,7 +81,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 });
     }
 
-    const { namaMustahik, kategoriId, jumlahUang, jumlahBeras, keterangan } = validation.data;
+    const { namaMustahik, kategoriId, jumlahUang, jumlahBeras, keterangan, rt, rw } = validation.data;
 
     const dataDiubah = await prisma.penyaluran.update({
       where: { id: Number(id) },
@@ -84,7 +90,9 @@ export async function PUT(request: Request) {
         kategoriId,
         jumlahUang,
         jumlahBeras,
-        keterangan: keterangan || null
+        keterangan: keterangan || null,
+        rt: rt || null,
+        rw: rw || null,
       }
     });
 

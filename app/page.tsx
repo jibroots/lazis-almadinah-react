@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   CheckCircle,
   AlertCircle
@@ -19,6 +19,14 @@ import PenyaluranView from '../components/Penyaluran/PenyaluranView';
 import KategoriView from '../components/Kategori/KategoriView';
 import UserView from '../components/UserView';
 import MonthlyReport from '@/components/Report/MonthlyReport';
+
+const formatRupiah = (num: number): string => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(num);
+};
 
 export default function Home() {
   // Authentication States
@@ -122,8 +130,6 @@ export default function Home() {
         if (authData.authenticated) {
           setCurrentUser(authData.user);
           setIsLoggedIn(true);
-          // Setelah validasi login, langsung tarik data
-          await loadAllData();
         }
       }
       setIsCheckingAuth(false);
@@ -145,19 +151,19 @@ export default function Home() {
     }
   };
 
+  // 1. Efek ini hanya berjalan SATU KALI saat web pertama kali dibuka (untuk cek sesi)
   useEffect(() => {
     initDatabaseAndLoad();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const handleLoginSuccess = async (user: UserAmil) => {
-    setCurrentUser(user);
-    setIsLoggedIn(true);
-    showNotification('success', `Selamat Datang, ${user.nama}! Anda masuk sebagai ${user.role}.`);
-    setActiveTab('dashboard');
-    
-    // TARIK DATA BEGITU LOGIN BERHASIL
-    await loadAllData(); 
-  };
   }, []);
+
+  // 2. Efek ini akan otomatis berjalan saat pengguna berhasil Login atau Sesi ditemukan
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadAllData();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]);
 
   // ====================================================
   // 3. AUTH & CALCULATIONS
@@ -180,22 +186,77 @@ export default function Home() {
     showNotification('success', 'Anda telah berhasil keluar dari sistem keamanan.');
   };
 
-  const totalPenerimaanUang = penerimaanList.reduce((acc, curr) => acc + (Number(curr.jumlahUang) || 0), 0);
-  const totalPenerimaanBeras = penerimaanList.reduce((acc, curr) => acc + (Number(curr.jumlahBeras) || 0), 0);
+  // --- MESIN AKUNTANSI DANA (BRANKAS PER KATEGORI) ---
+  const dataSaldo = useMemo(() => {
+    const brankas: Record<string, { uang: number, beras: number, nama: string }> = {};
 
-  const totalPenyaluranUang = penyaluranList.reduce((acc, curr) => acc + (Number(curr.jumlahUang) || 0), 0);
-  const totalPenyaluranBeras = penyaluranList.reduce((acc, curr) => acc + (Number(curr.jumlahBeras) || 0), 0);
+    // 1. Inisialisasi brankas (Gunakan k.nama karena db menyimpan nama kategori, bukan id)
+    kategoriList.forEach(k => {
+      brankas[k.nama] = { uang: 0, beras: 0, nama: k.nama };
+    });
 
-  const saldoUang = totalPenerimaanUang - totalPenyaluranUang;
-  const saldoBeras = totalPenerimaanBeras - totalPenyaluranBeras;
+    // 2. Proses Transaksi Penerimaan
+    penerimaanList.forEach(p => {
+      const kId = p.kategoriId; // Ini adalah NAMA kategori (contoh: "Zakat Fitrah")
+      if (!brankas[kId]) brankas[kId] = { uang: 0, beras: 0, nama: kId };
 
-  const formatRupiah = (num: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(num);
-  };
+      let uang = Number(p.jumlahUang) || 0;
+      const beras = Number(p.jumlahBeras) || 0;
+
+      // Cek infaq sisa kembalian di keterangan
+      let embeddedInfaq = 0;
+      if (p.keterangan) {
+        const match = p.keterangan.match(/Termasuk Infaq Rp\.?\s*([\d.]+)/i);
+        if (match) {
+          embeddedInfaq = Number(match[1].replace(/\./g, '')) || 0;
+        }
+      }
+
+      // Cari kunci Infaq di brankas
+      const infaqKey = Object.keys(brankas).find(k => k.toLowerCase().includes('infaq') || k.toLowerCase().includes('sedekah') || k.toLowerCase().includes('shodaqoh')) || 'Infaq & Sedekah';
+
+      // Jika ada infaq terselubung dan transaksi ini bukan kategori Infaq itu sendiri
+      if (embeddedInfaq > 0 && !kId.toLowerCase().includes('infaq') && !kId.toLowerCase().includes('sedekah')) {
+        if (!brankas[infaqKey]) brankas[infaqKey] = { uang: 0, beras: 0, nama: infaqKey };
+        brankas[infaqKey].uang += embeddedInfaq;
+        // Catatan: uang (tagihan fitrah) sudah net di db, tidak perlu dikurangi
+      }
+
+      brankas[kId].uang += uang;
+      brankas[kId].beras += beras;
+    });
+
+    // 3. Kurangi laci dengan pengeluaran (Penyaluran)
+    penyaluranList.forEach(p => {
+      const kId = p.kategoriId;
+      if (brankas[kId]) {
+        brankas[kId].uang -= (Number(p.jumlahUang) || 0);
+        brankas[kId].beras -= (Number(p.jumlahBeras) || 0);
+      }
+    });
+
+    // 4. Hitung Saldo Global Bersih (Siap Salur) & Kas Beras
+    let totalUangSiapSalur = 0;
+    let totalBerasSiapSalur = 0;
+    let uangKasBeras = 0;
+    let totalDanaYatim = 0;
+
+    Object.entries(brankas).forEach(([key, k]) => {
+      totalBerasSiapSalur += k.beras;
+      
+      // Kas Penjualan Beras = Saldo bersih dari Zakat Fitrah Uang
+      // Uang Fitrah TIDAK dimasukkan ke Total Uang Siap Salur
+      if (key.toLowerCase().includes('fitrah')) {
+        uangKasBeras += k.uang;
+      } else if (key.toLowerCase().includes('yatim')) {
+        totalDanaYatim += k.uang;
+      } else {
+        totalUangSiapSalur += k.uang;
+      }
+    });
+
+    return { brankas, uangKasBeras, totalUangSiapSalur, totalBerasSiapSalur, totalDanaYatim };
+  }, [penerimaanList, penyaluranList, kategoriList]);
 
   // ====================================================
   // 4. PENERIMAAN CRUD HOOKS
@@ -546,12 +607,7 @@ export default function Home() {
             {activeTab === 'dashboard' && (
               <DashboardView 
                 currentUser={currentUser}
-                saldoUang={saldoUang}
-                totalPenerimaanUang={totalPenerimaanUang}
-                totalPenyaluranUang={totalPenyaluranUang}
-                saldoBeras={saldoBeras}
-                totalPenerimaanBeras={totalPenerimaanBeras}
-                totalPenyaluranBeras={totalPenyaluranBeras}
+                dataSaldo={dataSaldo}
                 penerimaanList={penerimaanList}
                 penyaluranList={penyaluranList}
                 setActiveTab={setActiveTab}
@@ -577,6 +633,9 @@ export default function Home() {
                 penyaluranList={penyaluranList}
                 kategoriList={kategoriList}
                 currentUser={currentUser}
+                // --- HAPUS DUA SALDO LAMA, GANTI DENGAN DATA SALDO BARU ---
+                dataSaldo={dataSaldo} 
+                // ----------------------------------------------------------
                 onAdd={handleAddPenyaluran}
                 onEdit={handleEditPenyaluran}
                 onDelete={handleDeletePenyaluran}

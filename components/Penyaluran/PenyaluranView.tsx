@@ -10,6 +10,7 @@ interface PenyaluranViewProps {
   penyaluranList: Penyaluran[];
   kategoriList: KategoriZIS[];
   currentUser: UserAmil | null;
+  dataSaldo: any;
   onAdd: (newData: any) => void;
   onEdit: (id: number, updatedData: any) => void;
   onDelete: (id: number) => void;
@@ -23,10 +24,17 @@ export default function PenyaluranView({
   onAdd,
   onEdit,
   onDelete,
-  formatRupiah
+  formatRupiah,
+  dataSaldo
 }: PenyaluranViewProps) {
   const [viewMode, setViewMode] = useState<'list' | 'add' | 'edit'>('list');
   const [editingItem, setEditingItem] = useState<Penyaluran | null>(null);
+
+  // Fungsi untuk menerjemahkan ID Kategori menjadi Nama Kategori
+  const getNamaKategori = (id: string) => {
+    const kategori = kategoriList.find(k => String(k.id) === String(id));
+    return kategori ? kategori.nama : id;
+  };
   
   // Modals visibility states
   const [detailItem, setDetailItem] = useState<Penyaluran | null>(null);
@@ -55,6 +63,7 @@ export default function PenyaluranView({
         <PenyaluranForm
           initialData={editingItem}
           kategoriList={kategoriList}
+          dataSaldo={dataSaldo} 
           onCancel={() => {
             setViewMode('list');
             setEditingItem(null);
@@ -71,6 +80,7 @@ export default function PenyaluranView({
         data={penyaluranList}
         currentUser={currentUser}
         formatRupiah={formatRupiah}
+        getNamaKategori={getNamaKategori}
         onAddNew={() => setViewMode('add')}
         onEdit={(item) => {
           setEditingItem(item);
@@ -85,6 +95,7 @@ export default function PenyaluranView({
         item={detailItem}
         onClose={() => setDetailItem(null)}
         formatRupiah={formatRupiah}
+        getNamaKategori={getNamaKategori}
       />
 
       <PenyaluranDeleteModal

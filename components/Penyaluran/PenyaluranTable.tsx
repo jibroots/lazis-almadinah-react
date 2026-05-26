@@ -11,6 +11,7 @@ interface Props {
   onEdit: (item: Penyaluran) => void;
   onDelete: (item: Penyaluran) => void;
   onViewDetail: (item: Penyaluran) => void;
+  getNamaKategori: (id: string) => string;
 }
 
 export default function PenyaluranTable({
@@ -20,7 +21,8 @@ export default function PenyaluranTable({
   onAddNew,
   onEdit,
   onDelete,
-  onViewDetail
+  onViewDetail,
+  getNamaKategori
 }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -117,7 +119,7 @@ export default function PenyaluranTable({
                   </td>
                   <td className="p-4">
                     <span className="inline-block px-2.5 py-0.5 rounded bg-rose-50 text-rose-800 font-extrabold border border-rose-100/40 uppercase tracking-wide text-[10px]">
-                      {item.kategoriId}
+                      {getNamaKategori(item.kategoriId)}
                     </span>
                   </td>
                   <td className="p-4 text-right font-bold">

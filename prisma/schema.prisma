@@ -29,6 +29,10 @@ model Penyaluran {
   jumlahBeras       Decimal?  @default(0) @map("jumlah_beras") @db.Decimal(5, 2)
   tanggalPenyaluran DateTime? @default(now()) @map("tanggal_penyaluran") @db.Timestamp(6)
   keterangan        String?   @map("keterangan")
+  rt                String?   
+  rw                String?   
+  
+  
   amilPenyalur      String?   @default("Sistem") @map("amil_penyalur") @db.VarChar(100)
 
   @@map("penyaluran")
